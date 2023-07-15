@@ -1,6 +1,8 @@
 import time
 import machine
+import rp2
 import badger2040
+import badger_os
 import WIFI_CONFIG
 from picographics import PicoGraphics, DISPLAY_INKY_PACK
 from network_manager import NetworkManager
@@ -156,11 +158,12 @@ def sign_extend(value, bits):
     sign_bit = 1 << (bits - 1)
     return (value & (sign_bit - 1)) - (value & sign_bit)
 
+
+
 display = badger2040.Badger2040()
-# SWM: rotation by 180deg works but not 90deg :(
-display.display = PicoGraphics(display=DISPLAY_INKY_PACK,rotate=90)
+display.display = PicoGraphics(display=DISPLAY_INKY_PACK)
 # SWM: display.set_thickness(4)
-display.set_thickness(3)
+display.set_thickness(2)
 
 WIDTH, HEIGHT = display.get_bounds()
 # Thonny overwrites the Pico RTC so re-sync from the physical RTC if we can
@@ -235,51 +238,90 @@ def days_in_month(month, year):
     return (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
 
 
+def draw_speedometer(v):
+    vmax = 25
+    if(v>vmax):
+        v = vmax
+    display.set_pen(0)
+    scalex=8
+    scaley=2
+    w=vmax*scalex
+    h=vmax*scaley
+    x0=1
+    y0=h+1+12
+    x1=x0+w
+    y1=y0-h
+    xv=int(x0+v*scalex)
+    yv=int(y0-v*scaley)
+    display.line(x0-1,y0+1, x1+1,y0+1)
+    display.line(x0-1,y0+1, x1+1,y1-1)
+    display.line(x1+1,y0+1, x1+1,y1-1)
+    display.triangle(x0,y0, xv,y0, xv,yv)
+    display.set_font("bitmap6")
+    for vt in range(0,vmax,5):
+        display.text(f"{vt}",x0+vt*scalex,y0+10)
+
+def draw_battery():
+    batv = badger_os.get_battery_level()
+    batpc = batVolt2Percent(batv)
+    bat = f"{batpc:0.1f}%"
+    print(f"Debug: badger OS: bat = {bat}   voltage = {batv:0.2f}")
+
+    batv = readVsys()
+    batpc = batVolt2Percent(batv)
+    bat = f"{batpc:0.1f}%"
+    print(f"Debug: SWM readVsys: bat = {bat}   voltage = {batv:0.2f}")
+
+    barlen = int(batpc/4)
+    h = 12
+    w = 30
+    x0 = badger2040.WIDTH-w-3
+    y0 = 0
+    display.rectangle(x0,y0,w-3,h)
+    display.set_pen(15)
+    if(barlen<25):
+        display.rectangle(x0+barlen+1,y0+1,w-5-barlen,h-2)
+    display.set_pen(0)
+    display.rectangle(x0+w-3,y0+3,2,h-6)
+    display.set_font("bitmap6")
+    display.text(bat, x0-display.measure_text(bat)-2, 0)
+    
 def draw_display():
     global second_offset, second_unit_offset, time_y, count_c, bat_font_size, clk_font_size, dat_font_size, distance, velocity
 
     display.led(128)
-    batpc = batVolt2Percent(readVsys())
-    bat = "{:0.1f}%".format(batpc)
     #cnt = "{:05}".format(count_c)
     dst = f"{distance:.3f}km"
-    vel = f"{velocity:.2f}km/h"
+    #vel = f"{velocity:.2f}km/h"
     hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
     ymd = "{:04}/{:02}/{:02}".format(year, month, day)
 
     hms_width = display.measure_text(hms, clk_font_size)
     hms_offset = int((badger2040.WIDTH / 2) - (hms_width / 2))
-    h_width = display.measure_text(hms[0:2], clk_font_size)
-    mi_width = display.measure_text(hms[3:5], clk_font_size)
-    mi_offset = display.measure_text(hms[0:3], clk_font_size)
-
-#    ymd_width = display.measure_text(ymd, dat_font_size)
-#    ymd_offset = int((badger2040.WIDTH / 2) - (ymd_width / 2))
-#    y_width = display.measure_text(ymd[0:4], dat_font_size)
-#    m_width = display.measure_text(ymd[5:7], dat_font_size)
-#    m_offset = display.measure_text(ymd[0:5], dat_font_size)
-    d_width = display.measure_text(ymd, dat_font_size)
-    d_offset = badger2040.WIDTH - d_width
-
-#    bat_width = display.measure_text(bat, bat_font_size)
-#    bat_offset = int((badger2040.WIDTH / 2) - (bat_width / 2))
 
     display.set_pen(15)
     display.clear()
     display.set_pen(0)
-
+    draw_battery()
     
-    display.text(hms, d_offset, 30, wordwrap=0, scale=clk_font_size)
-    display.text(ymd, d_offset, 60, wordwrap=0, scale=dat_font_size)
-    display.text(bat, d_offset, 90, wordwrap=0, scale=bat_font_size)
+    display.set_font("bitmap8")
+    d_width = display.measure_text(ymd)
+    d_offset = badger2040.WIDTH - d_width
+    y0=badger2040.HEIGHT-16
+    display.text(hms, d_offset, y0-20) # , wordwrap=0, scale=clk_font_size)
+    display.text(ymd, d_offset, y0) # , wordwrap=0, scale=dat_font_size)
 
-    display.text(vel, 0, int(badger2040.HEIGHT/2)-15, wordwrap=0, scale=speed_font_size)
+    display.set_font("sans")
     display.text(dst, 0, badger2040.HEIGHT-15, wordwrap=0, scale=dist_font_size)
-
-    hms = "{:02}:{:02}:".format(hour, minute)
-    second_offset = hms_offset + display.measure_text(hms, clk_font_size)
-    hms = "{:02}:{:02}:{}".format(hour, minute, second // 10)
-    second_unit_offset = hms_offset + display.measure_text(hms, clk_font_size)
+    #display.text(vel, 0, int(badger2040.HEIGHT/2)-15, wordwrap=0, scale=speed_font_size)
+    draw_speedometer(velocity)
+    #vr = int((badger2040.HEIGHT-16)/2)
+    #x0 = vr
+    #y0 = x0
+    #display.circle(x0,y0,vr)
+    #display.set_pen(15)
+    #display.circle(x0,y0,vr-2)
+    #display.set_pen(0)
 
     display.set_update_speed(2)
     display.update()
@@ -319,7 +361,7 @@ while True:
         if(x<0):
             velocity = 0.0
         else:
-            velocity = dist_per_pulse*x/1000000.0
+            velocity = dist_per_pulse*1000000.0/x
         #period = f"{(x/1000.0):.2f}ms"
         # convert m/s to km/h
         velocity = velocity * 60*60/1000.0
