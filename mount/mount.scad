@@ -10,7 +10,7 @@ monolayer_h=0.2;
 mount_d=32;
 mount_x=54;
 mount_y=24;
-mount_z=mount_d+10;
+mount_z=mount_d+12;
 boltoffset_x=11.5;
 boltoffset_y=10;
 mountoffset=24;
@@ -132,10 +132,11 @@ module badger_upper_box() {
   lh=0.2; // layer height
   screen_w=3; // screen thickness
   frame_w=1;  // thickness of frame around screen
-  frame_s=7;  // frame size
+  frame_s=7+8;  // frame size
   corner_r=3;
-  size_x=86;
-  size_y=49;
+  gap=0.4;
+  size_x=86+gap;
+  size_y=49+gap;
   difference() {
     //box_with_corners(size_x+w*4,size_y+w*4,corner_r+w*2,t+screen_w+frame_w);
     
@@ -143,7 +144,7 @@ module badger_upper_box() {
       translate([0,0,-w/2])
       for(stp=[0:lh:w])
         translate([0,0,stp])
-          box_with_corners(size_x+w*4-stp*2,size_y+w*4-stp*2,corner_r+w*2-stp,t+screen_w+frame_w-w);
+          box_with_corners(size_x+w*4-stp*2,size_y+w*4-stp*2,corner_r+w*2+gap-stp,t+screen_w+frame_w-w);
     }
     union() {
       translate([0,0,-(screen_w+frame_w)/2])
@@ -155,31 +156,99 @@ module badger_upper_box() {
   }
 }
 
+module psu_lower_box() {
+  t=34; // lid
+  w=2; // wall thickness
+  corner_r=3;
+  size_x=86;
+  size_y=49;
+  difference() {
+    box_with_corners(size_x+w*2,size_y+w*2,corner_r+w,t+w);
+    union() {
+      translate([0,0,w/2])
+        box_with_corners(size_x,size_y,corner_r,t);
+    }
+  }
+  //TODO: add bolt points
+}
+
+
+module psu_upper_box() {
+  t=12; // lid
+  w=2; // wall thickness
+  bh=3; // bolt head height
+  wb=w+bh; // base thickness including 3mm for bolt head
+  corner_r=3;
+  gap=0.4;
+  size_x=86+gap;
+  size_y=49+gap;
+  rotate([180,0,0])
+  difference() {
+    box_with_corners(size_x+w*4,size_y+w*4,corner_r+w*2+gap,t+wb);
+    union() {
+      translate([0,0,wb/2])
+        box_with_corners(size_x+w*2,size_y+w*2,corner_r+w+gap,t);
+      // holes for wires
+      for(x=[-(mount_x-boltoffset_x)/2, (mount_x-boltoffset_x)/2])
+        translate([x,0,0])
+          cube([6,4.5,t+wb*2],center=true);
+      // mount holes
+      for(x=[-mountoffset/2, mountoffset/2])
+        translate([x,0,-wb/2])
+        union() {
+          cylinder(h=t+wb+1, d=boltdiam, center=true,$fn=50);
+          cylinder(h=t-bh, d=bolthead, center=true, $fn=100);
+        }
+    }
+  }
+}
+
 
 // battery:
 //   37mm wide, 70mm long, 19mm deep
+// circuit board
+//   12mm deep
 // capacitor:
 //   18mm diameter, 41mm long inc wires
 
 
-//mount();
+// model
+//  0 = all
+//  1 = mount lower
+//  2 = mount upper
+//  3 = badger lower
+//  4 = badger upper
+//  5 = psu upper (lid)
+//  6 = psu lower (main box)
 
-/*
-translate([0,0,28])
-    union() {
-      color("blue") badger_lower_box();
-//      color("green") badger_outline();
+model=56;
+if(model==0) {
+  mount_separator(0);
+  translate([0,0,31])
+      union() {
+        badger_lower_box();
+        //color("green") badger_outline();
     }
-*/
-
-translate([0,0,42])
-  rotate([180,0,0])
-    color("blue") badger_upper_box();
-
-// mount parts for printing
-//mount_separator(1);
-/*
-translate([0,40,0])
-  rotate([180,0,0])
-    mount_separator(-1);
-*/
+  translate([0,0,50])
+    badger_upper_box();
+  translate([0,0,-32])
+    psu_upper_box();
+  translate([0,0,-55])
+    psu_lower_box();
+}
+if(model==1)
+  mount_separator(1);
+if(model==2)
+  rotate([180,0,0]) mount_separator(-1);
+if(model==3)
+  badger_lower_box();
+if(model==4)
+  rotate([180,0,0]) badger_upper_box();
+if(model==5)
+  rotate([180,0,0]) psu_upper_box();
+if(model==6)
+  psu_lower_box();
+if(model==56) {
+  psu_lower_box();
+  translate([0,0,28]) psu_upper_box();
+}
