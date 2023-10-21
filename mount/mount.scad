@@ -156,6 +156,14 @@ module badger_upper_box() {
   }
 }
 
+module wedge(x,y,z) {
+  translate([-x/2,0,0])
+  difference() {
+    cube([x,y,z]);
+    rotate([-45,0,0]) translate([-1,0,0]) cube([x+2,y,z]);
+  }
+}
+
 module psu_lower_box() {
   t=34; // lid
   w=2; // wall thickness
@@ -163,21 +171,41 @@ module psu_lower_box() {
   size_x=86;
   size_y=49;
   difference() {
-    box_with_corners(size_x+w*2,size_y+w*2,corner_r+w,t+w);
     union() {
-      translate([0,0,w/2])
-        box_with_corners(size_x,size_y,corner_r,t);
+      difference() {
+        box_with_corners(size_x+w*2,size_y+w*2,corner_r+w,t+w);
+        translate([0,0,w/2])
+            box_with_corners(size_x,size_y,corner_r,t);
+      }
+      // add bolt points
+      translate([0,w+size_y/2,t/2+w/2-20])
+        rotate([0,0,180]) color("green") wedge(10,10,20);
+      translate([0,-(w+size_y/2),t/2+w/2-20])
+        color("green") wedge(10,10,20);
+    }
+    // holes for M5 nuts
+    union() {
+      m3bolt = 3;
+      m3nut = 6;
+      m2p5bolt = 2.5;
+      m2p5nut = 5;
+      nutd=m2p5nut;
+      translate([0,(size_y+w*2)/2-7,(t+w)/2-5])
+        rotate([0,90,90])
+          color("red") cylinder(h=7, d=nutd, $fn=6);      
+      translate([0,-(size_y+w*2)/2,(t+w)/2-5])
+        rotate([0,90,90])
+          color("red") cylinder(h=7, d=nutd, $fn=6);      
     }
   }
-  //TODO: add bolt points
 }
 
 
 module psu_upper_box() {
-  t=12; // lid
   w=2; // wall thickness
   bh=3; // bolt head height
   wb=w+bh; // base thickness including 3mm for bolt head
+  t=8+wb; // lid overall thickness
   corner_r=3;
   gap=0.4;
   size_x=86+gap;
@@ -199,6 +227,10 @@ module psu_upper_box() {
           cylinder(h=t+wb+1, d=boltdiam, center=true,$fn=50);
           cylinder(h=t-bh, d=bolthead, center=true, $fn=100);
         }
+      // holes to attach to bottom
+      translate([0,0,0])
+        rotate([90,0,0])
+          color("red") cylinder(h=size_y+w*4+2,d=2, center=true, $fn=4);
     }
   }
 }
@@ -221,7 +253,8 @@ module psu_upper_box() {
 //  5 = psu upper (lid)
 //  6 = psu lower (main box)
 
-model=56;
+
+model=5;
 if(model==0) {
   mount_separator(0);
   translate([0,0,31])
@@ -250,5 +283,5 @@ if(model==6)
   psu_lower_box();
 if(model==56) {
   psu_lower_box();
-  translate([0,0,28]) psu_upper_box();
+  translate([0,0,28-15]) psu_upper_box();
 }
