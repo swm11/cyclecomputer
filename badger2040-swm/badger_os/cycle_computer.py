@@ -21,6 +21,7 @@ woken_by_button = badger2040.woken_by_button()  # Must be done before we clear_p
 dist_per_pulse=0.15461538*1.6*2.0
 distance = 0
 velocity = 0
+velocity_counter = 0
     
 
 # SWM:
@@ -239,6 +240,7 @@ def days_in_month(month, year):
 
 
 def draw_speedometer(v):
+    global velocity_counter
     vmax = 25
     if(v>vmax):
         v = vmax
@@ -260,7 +262,10 @@ def draw_speedometer(v):
     display.set_font("bitmap6")
     for vt in range(0,vmax,5):
         display.text(f"{vt}",x0+vt*scalex,y0+10)
-    display.text(f"{v}km/h",0,y0)
+    #display.set_font("sans")
+    display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
+    display.text(f"{velocity_counter}",vmax*scalex+8,y0-24)
+
 
 def draw_battery():
     batv = badger_os.get_battery_level()
@@ -362,6 +367,7 @@ while True:
     j=20
     while((j>0) and (swmperiod.rx_fifo()>0)):
         x = -sign_extend(swmperiod.get(),32)-1
+        velocity_counter = x
         j = j-1
     if(x<0):
         velocity = 0.0
