@@ -8,6 +8,12 @@ from picographics import PicoGraphics, DISPLAY_INKY_PACK
 #    data = f"latitude={lat}&logitude={lon}"
 #    print(f"debug: data = {data}")
 #    return urlopen("https://timeapi.io/api/Time/current/coordinate", data);
+
+
+# distance in meters for every pulse from the dynamo
+dist_per_pulse=0.15461538
+distance = 0
+velocity = 0
     
 
 # SWM:
@@ -131,6 +137,9 @@ def sign_extend(value, bits):
     sign_bit = 1 << (bits - 1)
     return (value & (sign_bit - 1)) - (value & sign_bit)
 
+# distance for every pulse from the dynamo
+dist_per_pulse=0.15461538
+
 display = badger2040.Badger2040()
 # SWM: rotation by 180deg works but not 90deg :(
 display.display = PicoGraphics(display=DISPLAY_INKY_PACK,rotate=90)
@@ -209,11 +218,13 @@ def days_in_month(month, year):
 
 
 def draw_clock():
-    global second_offset, second_unit_offset, time_y, count_c, bat_font_size, clk_font_size, dat_font_size
+    global second_offset, second_unit_offset, time_y, count_c, bat_font_size, clk_font_size, dat_font_size, distance, velocity
 
     display.led(128)
     bat = "{:0.3f}V".format(readVsys())
-    cnt = "{:05}".format(count_c)
+    #cnt = "{:05}".format(count_c)
+    dst = f"{distance:.3f}km"
+    vel = f"{velocity:.2f}km/h"
     hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
     ymd = "{:04}/{:02}/{:02}".format(year, month, day)
 
@@ -246,8 +257,8 @@ def draw_clock():
     display.text(bat, 15, 115, wordwrap=0, scale=bat_font_size, angle=270)
 #    display.text(bat, 15, 100, wordwrap=0, scale=bat_font_size*4, angle=270)
 #    display.set_font("sans")
-    display.text(cnt, 260, 115, wordwrap=0, scale=bat_font_size, angle=270)
-    display.text(period, 280, 115, wordwrap=0, scale=bat_font_size, angle=270)
+    display.text(dst, 260, 115, wordwrap=0, scale=bat_font_size, angle=270)
+    display.text(vel, 280, 115, wordwrap=0, scale=bat_font_size, angle=270)
 
     hms = "{:02}:{:02}:".format(hour, minute)
     second_offset = hms_offset + display.measure_text(hms, clk_font_size)
@@ -325,12 +336,16 @@ while True:
     new_count_c = ctr_upper<<32 | ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
+    distance = count_c * dist_per_pulse / 1000.0
     if(swmperiod.rx_fifo()>0):
         x = -sign_extend(swmperiod.get(),32)-1
         if(x<0):
-            period = "Timeout"
+            velocity = 0.0
         else:
-            period = f"{(x/1000.0):.2f}ms"
+            velocity = dist_per_pulse*x/1000000.0
+        #period = f"{(x/1000.0):.2f}ms"
+        # convert m/s to km/h
+        velocity = velocity * 60*60/1000.0
     
     if not set_clock:
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
