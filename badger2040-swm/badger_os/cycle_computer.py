@@ -18,7 +18,7 @@ import gc
 woken_by_button = badger2040.woken_by_button()  # Must be done before we clear_pressed_to_wake
 
 # distance in meters for every pulse from the dynamo
-dist_per_pulse=0.15461538
+dist_per_pulse=0.15461538*1.6*2.0
 distance = 0
 velocity = 0
     
@@ -260,6 +260,7 @@ def draw_speedometer(v):
     display.set_font("bitmap6")
     for vt in range(0,vmax,5):
         display.text(f"{vt}",x0+vt*scalex,y0+10)
+    display.text(f"{v}km/h",0,y0)
 
 def draw_battery():
     batv = badger_os.get_battery_level()
@@ -356,12 +357,16 @@ while True:
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
     distance = count_c * dist_per_pulse / 1000.0
-    if(swmperiod.rx_fifo()>0):
+
+    x=-1
+    j=20
+    while((j>0) and (swmperiod.rx_fifo()>0)):
         x = -sign_extend(swmperiod.get(),32)-1
-        if(x<0):
-            velocity = 0.0
-        else:
-            velocity = dist_per_pulse*1000000.0/x
+        j = j-1
+    if(x<0):
+        velocity = 0.0
+    else:
+        velocity = dist_per_pulse*1000000.0/x
         #period = f"{(x/1000.0):.2f}ms"
         # convert m/s to km/h
         velocity = velocity * 60*60/1000.0
@@ -384,4 +389,7 @@ while True:
         toggle_set_clock = False
         draw_display()
 
-    time.sleep(0.01)
+    #time.sleep(0.01)
+    time.sleep(3)
+    #machine.lightsleep(3000) # sleep for 3,000ms
+    
