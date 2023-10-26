@@ -22,7 +22,7 @@ dist_per_pulse=0.15461538
 distance = 0
 velocity = 0
 velocity_counter = 0
-    
+batv = 0    
 
 # SWM:
 def get_network_time():
@@ -267,17 +267,20 @@ def draw_speedometer(v):
     display.text(f"{velocity_counter}",vmax*scalex+8,y0-24)
 
 
-def draw_battery():
-    batv = badger_os.get_battery_level()
-    batpc = batVolt2Percent(batv)
-    bat = f"{batpc:0.1f}%"
-    print(f"Debug: badger OS: bat = {bat}   voltage = {batv:0.2f}")
-
+def read_battery_level():
+    global batv
     batv = readVsys()
+#    batv = badger_os.get_battery_level()
+#    batpc = batVolt2Percent(batv)
+#    bat = f"{batpc:0.1f}%"
+#    print(f"Debug: badger OS: bat = {bat}   voltage = {batv:0.2f}")
+
+
+def draw_battery():
+    global batv
     batpc = batVolt2Percent(batv)
     bat = f"{batpc:0.1f}%"
-    print(f"Debug: SWM readVsys: bat = {bat}   voltage = {batv:0.2f}")
-
+    #print(f"Debug: SWM readVsys: bat = {bat}   voltage = {batv:0.2f}")
     barlen = int(batpc/4)
     h = 12
     w = 30
@@ -348,16 +351,18 @@ year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 
 last_second = second
 last_minute = minute
+read_battery_level()
 draw_display()
 
 
 ctr_upper = 0
 ctr_lower = 0
 while True:
-    if(swmctr1uppersm.rx_fifo()>0):
-        ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
-    if(swmctr1sm.rx_fifo()>0):
-        ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
+    for j in range(4):
+        if(swmctr1uppersm.rx_fifo()>0):
+            ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
+        if(swmctr1sm.rx_fifo()>0):
+            ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
     new_count_c = ctr_upper<<32 | ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
@@ -381,7 +386,8 @@ while True:
     if not set_clock:
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
         if((minute != last_minute) or count_c_changed):
-            count_c_changed=False
+            if(minute != last_minute): # try to only read the battery voltage every minute
+                read_battery_level()
             last_minute = minute
             last_second = second
             draw_display()
@@ -397,6 +403,12 @@ while True:
         draw_display()
 
     #time.sleep(0.01)
-    time.sleep(3)
+    if(count_c_changed):
+        time.sleep(3)
+    else:
+        if(hour < 7): # Sleep a lot at night
+            time.sleep(600)
+        else:
+            time.sleep(20)
     #machine.lightsleep(3000) # sleep for 3,000ms
     
