@@ -24,7 +24,23 @@ velocity = 0
 velocity_counter = 0
 batv = 0    
 
-# SWM:
+client=None
+wlan=None
+
+def stopWifi():
+    global client
+    global wlan
+    if not(client==None):
+        client.disconnect()
+        client=None
+    if not(wlan==None):
+        wlan.disconnect()
+        wlan.active(False)
+        wlan.deinit()
+        wlan=None
+    time.sleep_ms(100)
+
+
 def get_network_time():
     if not(badger2040.is_wireless()):
         return
@@ -56,8 +72,9 @@ def get_network_time():
             print("Failed to connect to the network")
     except (RuntimeError, OSError) as e:
         print(f"Wireless Error: {e.value}")
-    display.led(0)
     network_manager.disconnect()
+    display.led(0)
+
 
 def setPad(gpio, value):
     machine.mem32[0x4001c000 | (4+ (4 * gpio))] = value
@@ -175,6 +192,7 @@ except RuntimeError:
 
 rtc = machine.RTC()
 get_network_time()
+stopWifi()
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
 period = "Timeout"
 swmctr1sm = rp2.StateMachine(0, swmctr1, in_base=button_c, jmp_pin=button_c, set_base=machine.Pin(badger2040.LED), freq=2000000)
@@ -298,7 +316,6 @@ def draw_battery():
 def draw_display():
     global second_offset, second_unit_offset, time_y, count_c, bat_font_size, clk_font_size, dat_font_size, distance, velocity
 
-    display.led(128)
     #cnt = "{:05}".format(count_c)
     dst = f"{distance:.3f}km"
     #vel = f"{velocity:.2f}km/h"
@@ -335,7 +352,6 @@ def draw_display():
     display.set_update_speed(2)
     display.update()
     display.set_update_speed(3)
-    display.led(0)
 
 
 for b in badger2040.BUTTONS.values():
@@ -357,6 +373,7 @@ draw_display()
 
 ctr_upper = 0
 ctr_lower = 0
+sleep_ctr = 0
 while True:
     for j in range(4):
         if(swmctr1uppersm.rx_fifo()>0):
@@ -402,13 +419,18 @@ while True:
         toggle_set_clock = False
         draw_display()
 
-    #time.sleep(0.01)
     if(count_c_changed):
-        time.sleep(3)
+        sleep_ctr = 0
     else:
-        if(hour < 7): # Sleep a lot at night
-            time.sleep(600)
-        else:
-            time.sleep(20)
+        sleep_ctr = sleep_ctr+1
+
+    if(sleep_ctr<10):
+        machine.lightsleep(3000) # sleep for 3s
+    else:
+        badger2040.turn_off()
+        #if(hour < 7): # Sleep a lot at night
+        #    time.sleep(600)
+        #else:
+        #    time.sleep(20)
     #machine.lightsleep(3000) # sleep for 3,000ms
     
