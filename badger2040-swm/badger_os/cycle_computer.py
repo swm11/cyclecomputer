@@ -32,18 +32,18 @@ client=None
 wlan=None
 
 # Bad version of stopWifi that fails to save power?
-def stopWifi():
-    global client
-    global wlan
-    if not(client==None):
-        client.disconnect()
-        client=None
-    if not(wlan==None):
-        wlan.disconnect()
-        wlan.active(False)
-        wlan.deinit()
-        wlan=None
-    time.sleep_ms(100)
+#def stopWifi():
+#    global client
+#    global wlan
+#    if not(client==None):
+#        client.disconnect()
+#        client=None
+#    if not(wlan==None):
+#        wlan.disconnect()
+#        wlan.active(False)
+#        wlan.deinit()
+#        wlan=None
+#    time.sleep_ms(100)
 
 
 def get_network_time():
