@@ -1,4 +1,5 @@
 import time
+import json
 import machine
 import rp2
 import badger2040
@@ -198,7 +199,33 @@ if(not(woken_by_rtc)):
 else:
     j=0 # TODO restore milage from a file?
 
-# stopWifi()
+year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+state_file_archive = "{:04}{:02}{:02}state.json".format(year, month, day)
+state_file = "state.json"
+try:
+    in_file = open(state_file, "r")
+    restored_state = json.load(in_file)
+    in_file.close()
+    distance = restored_state["dist"]
+    test_year = restored_state["year"]
+except:
+    print("No state file so initialising")
+    restored_state = {
+        "dist"   : 0.0,
+        "year"   : year,
+        "month"  : month,
+        "day"    : day,
+        "hour"   : hour,
+        "minute" : minute
+        }
+    out_file = open(state_file, "w")
+    json.dump(restored_state, out_file)
+    out_file.close()
+    #except:
+    #    print("Failed to write to ", state_file)
+
+distance = restored_state["dist"]
+
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
 period = "Timeout"
 swmctr1sm = rp2.StateMachine(0, swmctr1, in_base=button_c, jmp_pin=button_c, set_base=machine.Pin(badger2040.LED), freq=2000000)
@@ -388,7 +415,7 @@ while True:
     new_count_c = ctr_upper<<32 | ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
-    distance = count_c * dist_per_pulse / 1000.0
+    distance = restored_state["dist"] + count_c * dist_per_pulse / 1000.0
 
     x=-1
     j=4  # Four entry FIFO that we want to pull from to get a fresh value
@@ -432,7 +459,27 @@ while True:
     if(sleep_ctr<10):
         machine.lightsleep(3000) # sleep for 3s
     else:
-        badger2040.sleep_for(1) # sleep for 1 minute
+        if(distance>0):
+            save_state = {
+                "dist"   : restored_state["dist"] + distance,
+                "year"   : year,
+                "month"  : month,
+                "day"    : day,
+                "hour"   : hour,
+                "minute" : minute
+            }
+            try:
+                for fn in [state_file, state_file_archive]:
+                    out_file = open(fn, "w")
+                    json.dump(save_state, out_file)
+                    out_file.close()
+            except:
+                print("Failed to save state")
+        if(hour < 7): # sleep a lot at night
+            badger2040.sleep_for(60) # sleep for 1 hour
+        else:
+            badger2040.sleep_for(1) # sleep for 1 minute
+
         #badger2040.turn_off()
         
         #if(hour < 7): # Sleep a lot at night
