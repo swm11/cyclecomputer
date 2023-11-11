@@ -16,6 +16,7 @@ import gc
 #    return urlopen("https://timeapi.io/api/Time/current/coordinate", data);
 
 woken_by_button = badger2040.woken_by_button()  # Must be done before we clear_pressed_to_wake
+woken_by_rtc = badger2040.woken_by_rtc()
 
 # distance in meters for every pulse from the dynamo
 dist_per_pulse=0.15461538
@@ -192,10 +193,11 @@ except RuntimeError:
     pass
 
 rtc = machine.RTC()
-if(badger2040.woken_by_rtc()):
-    j=0 # TODO restore milage from a file?
-else:
+if(not(woken_by_rtc)):
     get_network_time()
+else:
+    j=0 # TODO restore milage from a file?
+
 # stopWifi()
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
 period = "Timeout"
@@ -218,7 +220,7 @@ while(swmperiod.rx_fifo()>0):
     j = swmperiod.get()
 
 
-display.set_update_speed(2)
+display.set_update_speed(1)
 
 
 display.set_font("sans")
@@ -353,9 +355,8 @@ def draw_display():
     #display.circle(x0,y0,vr-2)
     #display.set_pen(0)
 
-    display.set_update_speed(2)
     display.update()
-    display.set_update_speed(3)
+    display.set_update_speed(2)
 
 
 for b in badger2040.BUTTONS.values():
