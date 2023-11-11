@@ -21,7 +21,9 @@ woken_by_rtc = badger2040.woken_by_rtc()
 
 # distance in meters for every pulse from the dynamo
 dist_per_pulse=0.15461538
-distance = 0
+distance = 0.0
+distance_since_on = 0.0
+old_distance_since_on = 0.0
 velocity = 0
 velocity_counter = 0
 batv = 0    
@@ -200,7 +202,7 @@ else:
     j=0 # TODO restore milage from a file?
 
 year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-state_file_archive = "{:04}{:02}{:02}state.json".format(year, month, day)
+state_file_archive = "logs/{:04}{:02}{:02}state.json".format(year, month, day)
 state_file = "state.json"
 try:
     in_file = open(state_file, "r")
@@ -407,6 +409,8 @@ ctr_upper = 0
 ctr_lower = 0
 sleep_ctr = 0
 while True:
+    old_distance_since_on = distance_since_on
+    old_velocity = velocity
     for j in range(4):
         if(swmctr1uppersm.rx_fifo()>0):
             ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
@@ -415,7 +419,8 @@ while True:
     new_count_c = ctr_upper<<32 | ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
-    distance = restored_state["dist"] + count_c * dist_per_pulse / 1000.0
+    distance_since_on = count_c * dist_per_pulse / 1000.0
+    distance = restored_state["dist"] + distance_since_on
 
     x=-1
     j=4  # Four entry FIFO that we want to pull from to get a fresh value
@@ -423,7 +428,7 @@ while True:
         x = -sign_extend(swmperiod.get(),32)-1
         velocity_counter = x
         j = j-1
-    if(x<0):
+    if((x<0) or (distance_since_on == old_distance_since_on)):
         velocity = 0.0
     else:
         # velocity in m/s
@@ -434,7 +439,7 @@ while True:
     
     if not set_clock:
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-        if((minute != last_minute) or count_c_changed):
+        if((minute != last_minute) or count_c_changed or (velocity!=old_velocity)):
             if(minute != last_minute): # try to only read the battery voltage every minute
                 read_battery_level()
             last_minute = minute
@@ -459,7 +464,7 @@ while True:
     if(sleep_ctr<10):
         machine.lightsleep(3000) # sleep for 3s
     else:
-        if(distance>0):
+        if(distance_since_on > 0.0):
             save_state = {
                 "dist"   : restored_state["dist"] + distance,
                 "year"   : year,
