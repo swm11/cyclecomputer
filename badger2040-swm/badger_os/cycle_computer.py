@@ -27,6 +27,7 @@ batv = 0
 client=None
 wlan=None
 
+# Bad version of stopWifi that fails to save power?
 def stopWifi():
     global client
     global wlan
@@ -191,8 +192,11 @@ except RuntimeError:
     pass
 
 rtc = machine.RTC()
-get_network_time()
-stopWifi()
+if(badger2040.woken_by_rtc()):
+    j=0 # TODO restore milage from a file?
+else:
+    get_network_time()
+# stopWifi()
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
 period = "Timeout"
 swmctr1sm = rp2.StateMachine(0, swmctr1, in_base=button_c, jmp_pin=button_c, set_base=machine.Pin(badger2040.LED), freq=2000000)
@@ -427,7 +431,9 @@ while True:
     if(sleep_ctr<10):
         machine.lightsleep(3000) # sleep for 3s
     else:
-        badger2040.turn_off()
+        badger2040.sleep_for(1) # sleep for 1 minute
+        #badger2040.turn_off()
+        
         #if(hour < 7): # Sleep a lot at night
         #    time.sleep(600)
         #else:
