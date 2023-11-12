@@ -81,18 +81,24 @@ def get_network_time():
     display.led(0)
 
 
-def setPad(gpio, value):
+def setPadCtrl(gpio, value):
     machine.mem32[0x4001c000 | (4+ (4 * gpio))] = value
     
-def getPad(gpio):
+def getPadCtrl(gpio):
     return machine.mem32[0x4001c000 | (4+ (4 * gpio))]
 
 def readVsys():
-    oldpad = getPad(29)
-    setPad(29,128)  #no pulls, no output, no input
+    oldpad29 = getPadCtrl(29)
+    oldpad25 = getPadCtrl(25)
+    setPadCtrl(29,128)  #no pulls, no output, no input
+    #setPadCtrl(25,0)    #output drive 2mA
+    adc_en_vsys = machine.Pin(25, machine.Pin.OUT)
+    adc_en_vsys.value(1)
+    time.sleep_ms(1) # SWM: allow time for pin to stabalise?
     adc_Vsys = machine.ADC(3)
     Vsys = float(adc_Vsys.read_u16()) * 3.0 * 3.3 / float(1 << 16)
-    setPad(29,oldpad)
+    setPadCtrl(29,oldpad29)
+    setPadCtrl(25,oldpad25)
     return Vsys
 
 def batVolt2Percent(voltage):
@@ -220,11 +226,12 @@ except:
         "hour"   : hour,
         "minute" : minute
         }
-    out_file = open(state_file, "w")
-    json.dump(restored_state, out_file)
-    out_file.close()
-    #except:
-    #    print("Failed to write to ", state_file)
+    try:
+        out_file = open(state_file, "w")
+        json.dump(restored_state, out_file)
+        out_file.close()
+    except:
+        print("Failed to write to ", state_file)
 
 distance = restored_state["dist"]
 
@@ -411,11 +418,16 @@ sleep_ctr = 0
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
-    for j in range(4):
-        if(swmctr1uppersm.rx_fifo()>0):
-            ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
-        if(swmctr1sm.rx_fifo()>0):
-            ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
+    old_ctr_upper = -1
+    while(ctr_upper != old_ctr_upper):
+        for j in range(4):
+            old_ctr_upper = ctr_upper
+            if(swmctr1uppersm.rx_fifo()>0):
+                ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
+            if(swmctr1sm.rx_fifo()>0):
+                ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
+            if(swmctr1uppersm.rx_fifo()>0):
+                ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
     new_count_c = ctr_upper<<32 | ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
