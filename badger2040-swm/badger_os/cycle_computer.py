@@ -203,9 +203,6 @@ except RuntimeError:
     pass
 
 rtc = machine.RTC()
-#if(not(woken_by_rtc)):
-if(button_up.value() or button_down.value()):
-    get_network_time()
 
 year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 state_file_archive = "logs/{:04}{:02}{:02}state.json".format(year, month, day)
@@ -233,8 +230,6 @@ except:
     except:
         print("Failed to write to ", state_file)
 
-distance = restored_state["dist"]
-
 button_a = badger2040.BUTTONS[badger2040.BUTTON_A]
 button_b = badger2040.BUTTONS[badger2040.BUTTON_B]
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
@@ -250,6 +245,7 @@ swmperiod = rp2.StateMachine(5, swmperiod1, in_base=button_c, jmp_pin=button_c, 
 swmperiod.active(1)
 period_timeout = 5000000
 swmperiod.put(-period_timeout)
+
 
 # empty the fifo of stray data
 timeout=10
@@ -472,7 +468,8 @@ while True:
         sleep_ctr = sleep_ctr+1
 
     if(sleep_ctr<3*20): # stay awake for 3 minutes since bike is likely to move again
-        machine.lightsleep(3000) # sleep for 3s
+            time.sleep(3)
+            #machine.lightsleep(3000) # sleep for 3s
     else:
         # time for a deep sleep
         # determine if we need to save state
