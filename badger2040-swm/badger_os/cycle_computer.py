@@ -475,7 +475,7 @@ while True:
         # determine if we need to save state
         if(distance_since_on > 0.0):
             save_state = {
-                "dist"   : restored_state["dist"] + distance,
+                "dist"   : distance,
                 "year"   : year,
                 "month"  : month,
                 "day"    : day,
