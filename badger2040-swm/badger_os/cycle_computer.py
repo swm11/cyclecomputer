@@ -355,12 +355,15 @@ def draw_battery():
     display.set_font("bitmap6")
     display.text(bat, x0-display.measure_text(bat)-2, 0)
     
-def draw_display():
+def draw_display(sleeping=False):
     global second_offset, second_unit_offset, time_y, bat_font_size, clk_font_size, dat_font_size, distance, velocity
 
     dst = f"{distance:.3f}km"
     #vel = f"{velocity:.2f}km/h"
-    hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
+    if(sleeping):
+        hms = "{:02}:{:02}".format(hour, minute, second)
+    else:
+        hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
     ymd = "{:04}/{:02}/{:02}".format(year, month, day)
 
     hms_width = display.measure_text(hms, clk_font_size)
@@ -474,6 +477,9 @@ while True:
                 print("Failed to save state")
             # since we were moving but have now stopped we may be near a wifi hotspot, so try setting the time
             get_network_time()
+
+        display.set_update_speed(0)
+        draw_display(sleeping=True)
 
         if(hour < 7): # sleep a lot at night
             badger2040.sleep_for(60) # sleep for 1 hour
