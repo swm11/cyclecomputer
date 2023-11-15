@@ -303,7 +303,7 @@ def days_in_month(month, year):
 
 
 def draw_speedometer(v):
-    global velocity_counter
+    global velocity_counter, count_c
     vmax = 30
     if(v>vmax):
         v = vmax
@@ -326,8 +326,10 @@ def draw_speedometer(v):
     for vt in range(0,vmax,5):
         display.text(f"{vt}",x0+vt*scalex,y0+6)
     #display.set_font("sans")
+    # Display debug output
     display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
-    display.text(f"{velocity_counter}",vmax*scalex+8,y0-24)
+    display.text(f"V={velocity_counter}",vmax*scalex+8,y0-24)
+    display.text(f"C={count_c}",vmax*scalex+8,y0-38)
 
 
 def read_battery_level():
@@ -359,9 +361,8 @@ def draw_battery():
     display.text(bat, x0-display.measure_text(bat)-2, 0)
     
 def draw_display():
-    global second_offset, second_unit_offset, time_y, count_c, bat_font_size, clk_font_size, dat_font_size, distance, velocity
+    global second_offset, second_unit_offset, time_y, bat_font_size, clk_font_size, dat_font_size, distance, velocity
 
-    #cnt = "{:05}".format(count_c)
     dst = f"{distance:.3f}km"
     #vel = f"{velocity:.2f}km/h"
     hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
@@ -415,23 +416,16 @@ read_battery_level()
 draw_display()
 
 
-ctr_upper = 0
 ctr_lower = 0
 sleep_ctr = 0
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
-    old_ctr_upper = -1
-    while(ctr_upper != old_ctr_upper):
-        for j in range(4):
-            old_ctr_upper = ctr_upper
-            if(swmctr1uppersm.rx_fifo()>0):
-                ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
-            if(swmctr1sm.rx_fifo()>0):
-                ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
-            if(swmctr1uppersm.rx_fifo()>0):
-                ctr_upper = -sign_extend(swmctr1uppersm.get(),32)-1
-    new_count_c = ctr_upper<<32 | ctr_lower
+    timeout = 4
+    while ((timeout>0) and (swmctr1sm.rx_fifo()>0)):
+            ctr_lower = -sign_extend(swmctr1sm.get(),32)-1
+            timeout = timeout-1
+    new_count_c = ctr_lower
     count_c_changed = new_count_c != count_c
     count_c = new_count_c
     distance_since_on = count_c * dist_per_pulse / 1000.0
