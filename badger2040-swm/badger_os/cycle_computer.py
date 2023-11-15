@@ -484,7 +484,10 @@ while True:
         draw_display()
 
     if(count_c_changed):
-         sleep_ctr = sleep_after/rapid_update_rate
+        if(distance_since_on > 1.0):
+            sleep_ctr = sleep_after/rapid_update_rate
+        else:
+            sleep_ctr = 30/rapid_update_rate
     else:
         sleep_ctr = sleep_ctr-1
 
@@ -493,8 +496,8 @@ while True:
         #machine.lightsleep(3000) # sleep for 3s
     else:
         # time for a deep sleep
-        # determine if we need to save state
-        if(distance_since_on > 0.0):
+        # determine if we need to save state - have we moved over 1m?
+        if(distance_since_on > 1.0):
             save_state = {
                 "dist"   : distance,
                 "year"   : year,
@@ -509,7 +512,7 @@ while True:
                     json.dump(save_state, out_file)
                     out_file.close()
             except:
-                print("Failed to save state")
+                display_message("Failed to save state")
             # since we were moving but have now stopped we may be near a wifi hotspot, so try setting the time
             get_network_time()
 
