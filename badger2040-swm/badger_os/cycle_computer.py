@@ -272,8 +272,6 @@ dat_font_size = 0.5
 speed_font_size = 1
 dist_font_size = 1
 cursors = ["year", "month", "day", "hour", "minute"]
-set_clock = False
-toggle_set_clock = False
 cursor = 0
 last = 0
 count_c = 0
@@ -401,12 +399,6 @@ for b in badger2040.BUTTONS.values():
         b.irq(trigger=machine.Pin.IRQ_RISING, handler=button)
 
 year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-
-
-# SWM: why is the following needed?
-#if (year, month, day) == (2021, 1, 1):
-#    rtc.datetime((2022, 2, 28, 0, 12, 0, 0, 0))
-
 last_second = second
 last_minute = minute
 read_battery_level()
@@ -415,6 +407,8 @@ draw_display()
 
 ctr_lower = 0
 sleep_ctr = 0
+rapid_update_rate = 3  # max update rate is every 3 seconds
+sleep_after = 3*60 # sleep after 3 minutes of not moving
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
@@ -443,33 +437,22 @@ while True:
         # convert m/s to km/h
         velocity = velocity * 60*60/1000.0
     
-    if not set_clock:
-        year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-        if((minute != last_minute) or count_c_changed or (velocity!=old_velocity)):
-            if(minute != last_minute): # try to only read the battery voltage every minute
-                read_battery_level()
-            last_minute = minute
-            last_second = second
-            draw_display()
-#        else:
-#            if(second != last_second):
-#                draw_second()
-#                last_second = second
-
-    if toggle_set_clock:
-        set_clock = not set_clock
-        print(f"Set clock changed to: {set_clock}")
-        toggle_set_clock = False
+    year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+    if((minute != last_minute) or count_c_changed or (velocity!=old_velocity)):
+        if(minute != last_minute): # try to only read the battery voltage every minute
+            read_battery_level()
+        last_minute = minute
+        last_second = second
         draw_display()
 
     if(count_c_changed):
-        sleep_ctr = 0
+         sleep_ctr = sleep_after/rapid_update_rate
     else:
         sleep_ctr = sleep_ctr+1
 
-    if(sleep_ctr<3*20): # stay awake for 3 minutes since bike is likely to move again
-            time.sleep(3)
-            #machine.lightsleep(3000) # sleep for 3s
+    if(sleep_ctr>0):
+        time.sleep(rapid_update_rate)
+        #machine.lightsleep(3000) # sleep for 3s
     else:
         # time for a deep sleep
         # determine if we need to save state
@@ -497,11 +480,4 @@ while True:
         else:
             badger2040.sleep_for(1) # sleep for 1 minute
 
-        #badger2040.turn_off()
-        
-        #if(hour < 7): # Sleep a lot at night
-        #    time.sleep(600)
-        #else:
-        #    time.sleep(20)
-    #machine.lightsleep(3000) # sleep for 3,000ms
     
