@@ -1,3 +1,4 @@
+# TODO: remove use of upper distance counter since it will never be needed (would need to cycle over 20k miles between stops!)
 import time
 import json
 import machine
