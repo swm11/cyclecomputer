@@ -9,6 +9,7 @@ import badger_os
 import WIFI_CONFIG
 from picographics import PicoGraphics, DISPLAY_INKY_PACK
 from network_manager import NetworkManager
+import network
 import uasyncio
 import gc
 
@@ -47,13 +48,20 @@ wlan=None
 #        wlan=None
 #    time.sleep_ms(100)
 
+def display_message(msg="Hello World!"):
+    global display
+    display.set_pen(15)
+    display.clear()
+    display.set_pen(0)
+    display.set_font("bitmap8")
+    display.text(msg)
+    display.update()
+
 
 def get_network_time():
     if not(badger2040.is_wireless()):
         return
-    import network
     import ntptime
-    import WIFI_CONFIG
     print("Debug: SSID=", WIFI_CONFIG.SSID)
     # from urllib.urequest import urlopen
 
@@ -82,6 +90,13 @@ def get_network_time():
     network_manager.disconnect()
     display.led(0)
 
+def download_file(url,filename):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(ssid, password)
+    fromweb = urequests.get(url)
+    with open(filename, "w") as fw:
+        fw.write(fromweb.text)
 
 def setPadCtrl(gpio, value):
     machine.mem32[0x4001c000 | (4+ (4 * gpio))] = value
@@ -286,11 +301,25 @@ def button(pin):
     time.sleep(0.01)
     if not pin.value():
         return
-    if button_a.value() and button_b.value():
+    if(button_up.value() and button_down.value()):
+        url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
+        try:
+            display_message("Downloading update")
+            download_file(url, "cycle_computer")
+            display_message("SUCCESS!!!")
+        except:
+            display_message("Update FAILED :(")
         machine.reset()
-    if(button_up.value() or button_down.value()):
-        get_network_time()
-
+    if button_a.value() and button_b.value():
+        display_message("REBOOTING")
+        machine.reset()
+    if(button_down.value()):
+        display_message("Getting network time")
+        try:
+            get_network_time()
+            display_message("SUCCESS!!!")
+        except:
+            display_message("Failed to get network time")
 
 
 def days_in_month(month, year):
