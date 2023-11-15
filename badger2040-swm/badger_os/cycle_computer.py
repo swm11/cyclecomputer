@@ -447,6 +447,7 @@ ctr_lower = 0
 sleep_ctr = 0
 rapid_update_rate = 3  # max update rate is every 3 seconds
 sleep_after = 3*60 # sleep after 3 minutes of not moving
+sleep_after = 30 # sleep after 3 minutes of not moving
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
@@ -486,7 +487,7 @@ while True:
     if(count_c_changed):
          sleep_ctr = sleep_after/rapid_update_rate
     else:
-        sleep_ctr = sleep_ctr+1
+        sleep_ctr = sleep_ctr-1
 
     if(sleep_ctr>0):
         time.sleep(rapid_update_rate)
