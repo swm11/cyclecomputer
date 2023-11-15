@@ -391,6 +391,7 @@ def draw_battery():
     
 def draw_display(sleeping=False):
     global second_offset, second_unit_offset, time_y, bat_font_size, clk_font_size, dat_font_size, distance, velocity
+    global year, month, day, hour, minute, second
 
     dst = f"{distance:.3f}km"
     #vel = f"{velocity:.2f}km/h"
@@ -400,7 +401,7 @@ def draw_display(sleeping=False):
         hms = f"{hour:02}:{minute:02}:{second:02}"
     ymd = f"{year:04}/{month:02}/{day:02}"
 
-    hms_width = display.measure_text(hms, clk_font_size)
+    hms_width = display.measure_text("12:55:55", clk_font_size)
     hms_offset = int((badger2040.WIDTH / 2) - (hms_width / 2))
 
     display.set_pen(15)
