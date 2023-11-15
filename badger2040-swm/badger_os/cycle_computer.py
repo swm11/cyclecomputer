@@ -291,9 +291,9 @@ def button(pin):
         return
     if button_a.value() and button_b.value():
         machine.reset()
-#    if pin == button_c:
-#        count_c = count_c+1
-#        count_c_changed = True
+    if(button_up.value() or button_down.value()):
+        get_network_time()
+
 
 
 def days_in_month(month, year):
