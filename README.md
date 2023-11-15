@@ -7,3 +7,6 @@ powered from the dynamo and also gets movement information from the
 dynamo.  Distance traveled per day to be recorded and uploaded to a
 server.
 
+## Status
+
+Very much a work in progress.
