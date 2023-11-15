@@ -1,4 +1,5 @@
 # TODO: remove use of upper distance counter since it will never be needed (would need to cycle over 20k miles between stops!)
+# TODO: remove use of .format
 import time
 import json
 import machine
@@ -68,7 +69,7 @@ def get_network_time():
             ntptime.host = "uk.pool.ntp.org"
             ntptime.settime()
             year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-            ymd = "{:04}/{:02}/{:02}".format(year, month, day)
+            ymd = f"{year:04}/{month:02}/{day:02}"
             print(f"Finished ntptime, date: {ymd}")
             if(year>2022):
                 # NTP has probably set the time correctly, so save it
@@ -323,8 +324,9 @@ def draw_speedometer(v):
     #display.set_font("sans")
     # Display debug output
     display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
-    display.text(f"V={velocity_counter}",vmax*scalex+8,y0-24)
-    display.text(f"C={count_c}",vmax*scalex+8,y0-38)
+    #display.text(f"V={velocity_counter}",vmax*scalex+8,y0-24)
+    trip = count_c * dist_per_pulse
+    display.text(f"{trip:.3f}km",vmax*scalex+8,y0-24)
 
 
 def read_battery_level():
@@ -361,10 +363,10 @@ def draw_display(sleeping=False):
     dst = f"{distance:.3f}km"
     #vel = f"{velocity:.2f}km/h"
     if(sleeping):
-        hms = "{:02}:{:02}".format(hour, minute, second)
+        hms = f"{hour:02}:{minute:02}"
     else:
-        hms = "{:02}:{:02}:{:02}".format(hour, minute, second)
-    ymd = "{:04}/{:02}/{:02}".format(year, month, day)
+        hms = f"{hour:02}:{minute:02}:{second:02}"
+    ymd = f"{year:04}/{month:02}/{day:02}"
 
     hms_width = display.measure_text(hms, clk_font_size)
     hms_offset = int((badger2040.WIDTH / 2) - (hms_width / 2))
