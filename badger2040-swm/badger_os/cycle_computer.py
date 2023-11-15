@@ -447,7 +447,6 @@ ctr_lower = 0
 sleep_ctr = 0
 rapid_update_rate = 3  # max update rate is every 3 seconds
 sleep_after = 3*60 # sleep after 3 minutes of not moving
-sleep_after = 30 # sleep after 3 minutes of not moving
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
@@ -514,7 +513,7 @@ while True:
             # since we were moving but have now stopped we may be near a wifi hotspot, so try setting the time
             get_network_time()
 
-        display.set_update_speed(0)
+        display.set_update_speed(1)
         draw_display(sleeping=True)
 
         if(hour < 7): # sleep a lot at night
