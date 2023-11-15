@@ -440,7 +440,7 @@ year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 last_second = second
 last_minute = minute
 read_battery_level()
-draw_display()
+#draw_display()
 
 
 ctr_lower = 0
