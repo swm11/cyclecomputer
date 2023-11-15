@@ -127,22 +127,23 @@ def swmctr1():
     wait(1,pin,0) [1]
     set(pins, 1)
     jmp(x_dec, "swmlab")
-    irq(clear,4)
-    irq(4)
+#    irq(clear,4)
+#    irq(4)
     wrap()
 
+# upper counter commented out since a 32b counter is sufficient
 # upper 32b of ctr1
 # 7 instructions
-@rp2.asm_pio()
-def swmctr1_upper():
-    set(x,0)
-    wrap_target()
-    label("upperloop")
-    mov(isr,x)
-    push(noblock)
-    irq(block,4)
-    jmp(x_dec,"upperloop")
-    wrap()
+#@rp2.asm_pio()
+#def swmctr1_upper():
+#    set(x,0)
+#    wrap_target()
+#    label("upperloop")
+#    mov(isr,x)
+#    push(noblock)
+#    irq(block,4)
+#    jmp(x_dec,"upperloop")
+#    wrap()
 
 
 # return the clock period
@@ -240,8 +241,8 @@ period = "Timeout"
 swmctr1sm = rp2.StateMachine(0, swmctr1, in_base=button_c, jmp_pin=button_c, set_base=machine.Pin(badger2040.LED), freq=2000000)
 swmctr1sm.active(1)
 print(swmctr1sm)
-swmctr1uppersm = rp2.StateMachine(1, swmctr1_upper, freq=2000000)
-swmctr1uppersm.active(1)
+#swmctr1uppersm = rp2.StateMachine(1, swmctr1_upper, freq=2000000)
+#swmctr1uppersm.active(1)
 swmperiod = rp2.StateMachine(5, swmperiod1, in_base=button_c, jmp_pin=button_c, freq=4000000)
 swmperiod.active(1)
 period_timeout = 5000000
@@ -325,7 +326,7 @@ def draw_speedometer(v):
     # Display debug output
     display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
     #display.text(f"V={velocity_counter}",vmax*scalex+8,y0-24)
-    trip = count_c * dist_per_pulse
+    trip = count_c * dist_per_pulse / 1000
     display.text(f"{trip:.3f}km",vmax*scalex+8,y0-24)
 
 
