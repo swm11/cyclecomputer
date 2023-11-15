@@ -10,6 +10,7 @@ import WIFI_CONFIG
 from picographics import PicoGraphics, DISPLAY_INKY_PACK
 from network_manager import NetworkManager
 import network
+import urequests
 import uasyncio
 import gc
 
@@ -54,7 +55,7 @@ def display_message(msg="Hello World!"):
     display.clear()
     display.set_pen(0)
     display.set_font("bitmap8")
-    display.text(msg)
+    display.text(msg,0,20)
     display.update()
 
 
@@ -93,7 +94,7 @@ def get_network_time():
 def download_file(url,filename):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    wlan.connect(ssid, password)
+    wlan.connect(WIFI_CONFIG.SSID, WIFI_CONFIG.PSK)
     fromweb = urequests.get(url)
     with open(filename, "w") as fw:
         fw.write(fromweb.text)
@@ -269,10 +270,10 @@ timeout=10
 while((timeout>0) and (swmctr1sm.rx_fifo()>0)):
     j = swmctr1sm.get()
     timeout = timeout-1
-timeout=10
-while((timeout>0) and (swmctr1uppersm.rx_fifo()>0)):
-    j = swmctr1uppersm.get()
-    timeout = timeout-1
+#timeout=10
+#while((timeout>0) and (swmctr1uppersm.rx_fifo()>0)):
+#    j = swmctr1uppersm.get()
+#    timeout = timeout-1
 timeout=10
 while((timeout>0) and (swmperiod.rx_fifo()>0)):
     j = swmperiod.get()
@@ -304,12 +305,12 @@ def button(pin):
     if(button_up.value() and button_down.value()):
         url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
         try:
-            display_message("Downloading update")
+            display_message("Downloading update: "+url)
             download_file(url, "cycle_computer")
             display_message("SUCCESS!!!")
+            machine.reset()
         except:
             display_message("Update FAILED :(")
-        machine.reset()
     if button_a.value() and button_b.value():
         display_message("REBOOTING")
         machine.reset()
