@@ -202,10 +202,9 @@ except RuntimeError:
     pass
 
 rtc = machine.RTC()
-if(not(woken_by_rtc)):
+#if(not(woken_by_rtc)):
+if(button_up.value() or button_down.value()):
     get_network_time()
-else:
-    j=0 # TODO restore milage from a file?
 
 year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 state_file_archive = "logs/{:04}{:02}{:02}state.json".format(year, month, day)
@@ -235,7 +234,11 @@ except:
 
 distance = restored_state["dist"]
 
+button_a = badger2040.BUTTONS[badger2040.BUTTON_A]
+button_b = badger2040.BUTTONS[badger2040.BUTTON_B]
 button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
+button_up = badger2040.BUTTONS[badger2040.BUTTON_UP]
+button_down = badger2040.BUTTONS[badger2040.BUTTON_DOWN]
 period = "Timeout"
 swmctr1sm = rp2.StateMachine(0, swmctr1, in_base=button_c, jmp_pin=button_c, set_base=machine.Pin(badger2040.LED), freq=2000000)
 swmctr1sm.active(1)
@@ -248,12 +251,18 @@ period_timeout = 5000000
 swmperiod.put(-period_timeout)
 
 # empty the fifo of stray data
-while(swmctr1sm.rx_fifo()>0):
+timeout=10
+while((timeout>0) and (swmctr1sm.rx_fifo()>0)):
     j = swmctr1sm.get()
-while(swmctr1uppersm.rx_fifo()>0):
+    timeout = timeout-1
+timeout=10
+while((timeout>0) and (swmctr1uppersm.rx_fifo()>0)):
     j = swmctr1uppersm.get()
-while(swmperiod.rx_fifo()>0):
+    timeout = timeout-1
+timeout=10
+while((timeout>0) and (swmperiod.rx_fifo()>0)):
     j = swmperiod.get()
+    timeout = timeout-1
 
 
 display.set_update_speed(1)
@@ -272,12 +281,6 @@ cursor = 0
 last = 0
 count_c = 0
 count_c_changed = False
-button_a = badger2040.BUTTONS[badger2040.BUTTON_A]
-button_b = badger2040.BUTTONS[badger2040.BUTTON_B]
-button_c = badger2040.BUTTONS[badger2040.BUTTON_C]
-
-button_up = badger2040.BUTTONS[badger2040.BUTTON_UP]
-button_down = badger2040.BUTTONS[badger2040.BUTTON_DOWN]
 time_y = 34
 
 # Button handling function
@@ -473,9 +476,11 @@ while True:
     else:
         sleep_ctr = sleep_ctr+1
 
-    if(sleep_ctr<10):
+    if(sleep_ctr<3*20): # stay awake for 3 minutes since bike is likely to move again
         machine.lightsleep(3000) # sleep for 3s
     else:
+        # time for a deep sleep
+        # determine if we need to save state
         if(distance_since_on > 0.0):
             save_state = {
                 "dist"   : restored_state["dist"] + distance,
@@ -492,6 +497,9 @@ while True:
                     out_file.close()
             except:
                 print("Failed to save state")
+            # since we were moving but have now stopped we may be near a wifi hotspot, so try setting the time
+            get_network_time()
+
         if(hour < 7): # sleep a lot at night
             badger2040.sleep_for(60) # sleep for 1 hour
         else:
