@@ -307,7 +307,7 @@ def button(pin):
         url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
         try:
             display_message("Downloading update: "+url)
-            download_file(url, "cycle_computer")
+            download_file(url, "cycle_computer.py")
             display_message("SUCCESS!!!")
             machine.reset()
         except:
