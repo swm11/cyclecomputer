@@ -444,12 +444,13 @@ read_battery_level()
 
 
 ctr_lower = 0
-sleep_ctr = 0
 rapid_update_rate = 3  # max update rate is every 3 seconds
 sleep_after = 3*60 # sleep after 3 minutes of not moving
-# if we're woken by a button rather than the RTC then allow time for button (distance) measurements to accrue
-if(woken_by_button):
-    time.sleep(rapid_update_rate)
+# If we're woken by by the RTC then fast track to sleep, otherwise wait for events (distance)
+if(woken_by_rtc):
+    sleep_ctr = 0
+else:
+    sleep_ctr = 12/rapid_update_rate
 while True:
     old_distance_since_on = distance_since_on
     old_velocity = velocity
