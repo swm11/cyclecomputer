@@ -488,11 +488,15 @@ while True:
         draw_display()
 
     if(count_c_changed):
+        # we're moving...
         if(distance_since_on > 1.0):
+            # we're really moving...
             sleep_ctr = sleep_after/rapid_update_rate
         else:
+            # probably just a nudge
             sleep_ctr = 30/rapid_update_rate
     else:
+        # stationary so count down to sleep
         sleep_ctr = sleep_ctr-1
 
     if(sleep_ctr>0):
@@ -517,7 +521,8 @@ while True:
                     out_file.close()
             except:
                 display_message("Failed to save state")
-            # since we were moving but have now stopped we may be near a wifi hotspot, so try setting the time
+            # Since we were moving but have now stopped we may be near a wifi hotspot,
+            # so try using NTP to set the time
             get_network_time()
 
         display.set_update_speed(1)
