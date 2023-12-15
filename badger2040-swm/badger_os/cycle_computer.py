@@ -528,9 +528,10 @@ while True:
         display.set_update_speed(1)
         draw_display(sleeping=True)
 
-        if(hour < 7): # sleep a lot at night
-            badger2040.sleep_for(60) # sleep for 1 hour
-        else:
-            badger2040.sleep_for(1) # sleep for 1 minute
+        badger2040.sleep_for(60) # sleep for 1 hour always to save power
+#        if(hour < 7): # sleep a lot at night
+#            badger2040.sleep_for(60) # sleep for 1 hour
+#        else:
+#            badger2040.sleep_for(1) # sleep for 1 minute
 
     
