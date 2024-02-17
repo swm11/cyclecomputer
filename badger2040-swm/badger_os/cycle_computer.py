@@ -529,7 +529,7 @@ while True:
         draw_display(sleeping=True)
         time.sleep(1)
         #badger2040.sleep_for(60) # sleep for 1 hour always to save power
-        if((hour < 8) or (batv < 90)): # sleep a lot at night or if battery is below 90%
+        if((hour < 8) or (batVolt2Percent(batv) < 90)): # sleep a lot at night or if battery is below 90%
             badger2040.sleep_for(60) # sleep for 1 hour
         else:
             badger2040.sleep_for(1) # sleep for 1 minute
