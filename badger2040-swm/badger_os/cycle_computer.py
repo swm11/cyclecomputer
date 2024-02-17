@@ -306,7 +306,7 @@ def button(pin):
     if(button_up.value() and button_down.value()):
         url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
         try:
-            display_message("Downloading update: "+url)
+            display_message("Downloading update:\n"+url)
             download_file(url, "cycle_computer.py")
             display_message("SUCCESS!!!")
             machine.reset()
