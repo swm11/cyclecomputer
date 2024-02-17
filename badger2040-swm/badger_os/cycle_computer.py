@@ -56,9 +56,11 @@ def display_message(msg="Hello World!"):
     display.clear()
     display.set_pen(0)
     display.set_font("bitmap8")
-    display.text(msg,0,20)
+    y=0
+    for line in msg.split('\n'):
+        display.text(line,0,y)
+        y=y+16
     display.update()
-
 
 def get_network_time():
     if not(badger2040.is_wireless()):
