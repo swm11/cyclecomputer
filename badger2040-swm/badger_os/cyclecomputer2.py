@@ -87,15 +87,23 @@ def button(pin):
     time.sleep(0.01)
     if not pin.value():
         return
-    if(button_down.value()):
-        url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
+    if(button_up.value()):
+        manifest = ["main.py", "cycle_computer.py", "cyclecomputer2.py", "netbat.py", "movement.py", "cycledisplay.py"]
+        baseurl="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/"
+        status="Downloading updates:\n"
         try:
-            disp.display_message("Downloading update: "+url)
-            netbat.download_file(url, "cycle_computer.py")
-            disp.display_message("SUCCESS!!!")
+            for fn in manifest:
+                status=status+fn
+                display_message(status)
+                print(fn)
+                download_file(baseurl+fn, fn)
+                status=status+"   SUCCESS!!!\n"
+                display_message(status)
             machine.reset()
-        except:
-            disp.display_message("Update FAILED :(")
+        except (RuntimeError, OSError) as e:
+            print(f"Update FAILED :(\n{e.value}")
+            status=status+f"Update FAILED :(\n{e.value}"
+            display_message(status)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
         machine.reset()
