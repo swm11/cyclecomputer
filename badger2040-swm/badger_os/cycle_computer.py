@@ -306,7 +306,7 @@ def button(pin):
     if not pin.value():
         return
     if(button_up.value()):
-        manifest = ["main.py", "cycle_computer.py"]
+        manifest = ["main.py", "cycle_computer.py", "cyclecomputer2.py", "netbat.py", "movement.py"]
         baseurl="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/"
         status="Downloading updates:\n"
         try:
