@@ -7,16 +7,15 @@ import machine
 import badger2040
 import badger_os
 import WIFI_CONFIG
-from picographics import PicoGraphics, DISPLAY_INKY_PACK
-from network_manager import NetworkManager
-import network
-import ntptime
-import urequests
-import uasyncio
+# from network_manager import NetworkManager
+# import network
+# import ntptime
+# import urequests
+# import uasyncio
 import gc
 from movement import Movement
 import netbat
-
+import cycledisplay
 woken_by_button = badger2040.woken_by_button()  # Must be done before we clear_pressed_to_wake
 woken_by_rtc = badger2040.woken_by_rtc()
 
@@ -32,29 +31,8 @@ batpc = 0
 client=None
 wlan=None
 
+disp=cycledisplay.cycledisplay()
 
-def display_message(msg="Hello World!"):
-    global display
-    display.set_pen(15)
-    display.clear()
-    display.set_pen(0)
-    display.set_font("bitmap8")
-    y=0
-    for line in msg.split('\n'):
-        display.text(line,0,y)
-        y=y+16
-    display.update()
-
-
-
-
-
-display = badger2040.Badger2040()
-display.display = PicoGraphics(display=DISPLAY_INKY_PACK)
-# SWM: display.set_thickness(4)
-display.set_thickness(2)
-
-WIDTH, HEIGHT = display.get_bounds()
 # Thonny overwrites the Pico RTC so re-sync from the physical RTC if we can
 try:
     badger2040.pcf_to_pico_rtc()
@@ -103,19 +81,6 @@ button_up = badger2040.BUTTONS[badger2040.BUTTON_UP]
 button_down = badger2040.BUTTONS[badger2040.BUTTON_DOWN]
 period = "Timeout"
 
-display.set_update_speed(1)
-
-
-display.set_font("sans")
-bat_font_size = 0.5
-clk_font_size = 0.5
-dat_font_size = 0.5
-speed_font_size = 1
-dist_font_size = 1
-cursors = ["year", "month", "day", "hour", "minute"]
-cursor = 0
-last = 0
-time_y = 34
 
 # Button handling function
 def button(pin):
@@ -125,58 +90,30 @@ def button(pin):
     if(button_down.value()):
         url="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/cycle_computer.py"
         try:
-            display_message("Downloading update: "+url)
+            disp.display_message("Downloading update: "+url)
             netbat.download_file(url, "cycle_computer.py")
-            display_message("SUCCESS!!!")
+            disp.display_message("SUCCESS!!!")
             machine.reset()
         except:
-            display_message("Update FAILED :(")
+            disp.display_message("Update FAILED :(")
     if button_a.value() and button_b.value():
-        display_message("REBOOTING")
+        disp.display_message("REBOOTING")
         machine.reset()
     if(button_up.value()):
-        display_message("Getting network time")
+        disp.display_message("Getting network time")
         try:
             netbat.get_network_time()
-            display_message("SUCCESS!!!")
+            disp.display_message("SUCCESS!!!")
         except:
-            display_message("Failed to get network time")
+            disp.display_message("Failed to get network time")
 
 
-def days_in_month(month, year):
-    if month == 2 and ((year % 4 == 0 and year % 100 != 0) or year % 400 == 0):
-        return 29
-    return (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
+#def days_in_month(month, year):
+#    if month == 2 and ((year % 4 == 0 and year % 100 != 0) or year % 400 == 0):
+#        return 29
+#    return (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
 
 
-def draw_speedometer(v):
-    global velocity_counter, dist_since_on
-    vmax = 30
-    if(v>vmax):
-        v = vmax
-    display.set_pen(0)
-    scalex=6
-    scaley=2
-    w=vmax*scalex
-    h=vmax*scaley
-    x0=1
-    y0=h+1+12
-    x1=x0+w
-    y1=y0-h
-    xv=int(x0+v*scalex)
-    yv=int(y0-v*scaley)
-    display.line(x0-1,y0+1, x1+1,y0+1)
-    display.line(x0-1,y0+1, x1+1,y1-1)
-    display.line(x1+1,y0+1, x1+1,y1-1)
-    display.triangle(x0,y0, xv,y0, xv,yv)
-    display.set_font("bitmap6")
-    for vt in range(0,vmax,5):
-        display.text(f"{vt}",x0+vt*scalex,y0+6)
-    #display.set_font("sans")
-    # Display debug output
-    display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
-    #display.text(f"V={velocity_counter}",vmax*scalex+8,y0-24)
-    display.text(f"{dist_since_on:.3f}km",vmax*scalex+8,y0-24)
 
 
 def read_battery_level():
@@ -184,64 +121,6 @@ def read_battery_level():
     batpc = netbat.readBatteryPercent()
 
 
-def draw_battery():
-    global batpc
-    bat = f"{batpc:0.1f}%"
-    barlen = int(batpc/4)
-    h = 12
-    w = 30
-    x0 = badger2040.WIDTH-w-3
-    y0 = 0
-    display.rectangle(x0,y0,w-3,h)
-    display.set_pen(15)
-    if(barlen<25):
-        display.rectangle(x0+barlen+1,y0+1,w-5-barlen,h-2)
-    display.set_pen(0)
-    display.rectangle(x0+w-3,y0+3,2,h-6)
-    display.set_font("bitmap6")
-    display.text(bat, x0-display.measure_text(bat)-2, 0)
-    
-def draw_display(sleeping=False):
-    global second_offset, second_unit_offset, time_y, bat_font_size, clk_font_size, dat_font_size, distance, velocity
-    global year, month, day, hour, minute, second
-
-    dst = f"{distance:.3f}km"
-    #vel = f"{velocity:.2f}km/h"
-    if(sleeping):
-        hms = f"{hour:02}:{minute:02}"
-    else:
-        hms = f"{hour:02}:{minute:02}:{second:02}"
-    ymd = f"{year:04}/{month:02}/{day:02}"
-
-    hms_width = display.measure_text("12:55:55", clk_font_size)
-    hms_offset = int((badger2040.WIDTH / 2) - (hms_width / 2))
-
-    display.set_pen(15)
-    display.clear()
-    display.set_pen(0)
-    draw_battery()
-    
-    display.set_font("bitmap8")
-    d_width = display.measure_text(ymd)
-    d_offset = badger2040.WIDTH - d_width
-    y0=badger2040.HEIGHT-16
-    display.text(hms, d_offset, y0-20) # , wordwrap=0, scale=clk_font_size)
-    display.text(ymd, d_offset, y0) # , wordwrap=0, scale=dat_font_size)
-
-    display.set_font("sans")
-    display.text(dst, 0, badger2040.HEIGHT-15, wordwrap=0, scale=dist_font_size)
-    #display.text(vel, 0, int(badger2040.HEIGHT/2)-15, wordwrap=0, scale=speed_font_size)
-    draw_speedometer(velocity)
-    #vr = int((badger2040.HEIGHT-16)/2)
-    #x0 = vr
-    #y0 = x0
-    #display.circle(x0,y0,vr)
-    #display.set_pen(15)
-    #display.circle(x0,y0,vr-2)
-    #display.set_pen(0)
-
-    display.update()
-    display.set_update_speed(2)
 
 
 for b in badger2040.BUTTONS.values():
@@ -252,7 +131,6 @@ year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 last_second = second
 last_minute = minute
 read_battery_level()
-#draw_display()
 
 
 ctr_lower = 0
@@ -307,7 +185,8 @@ while True:
             read_battery_level()
         last_minute = minute
         last_second = second
-        draw_display()
+        disp.draw_display(velocity=velocity, batpc=batpc, distance=distance, dist_since_on=dist_since_on,
+                          year=year, month=month, day=day, hour=hour, minute=minute, second=second)
 
     if(moving):
         # we're moving...
@@ -343,17 +222,19 @@ while True:
                     out_file.close()
                     print("Debug: wrote state file")
             except:
-                display_message("Failed to save state")
+                disp.display_message("Failed to save state")
             # Since we were moving but have now stopped we may be near a wifi hotspot,
             # so try using NTP to set the time
             try:
                 netbat.get_network_time()
-                display_message("GOT NETWORK TIME!")
+                disp.display_message("GOT NETWORK TIME!")
             except:
                 print("Failed to get network time")
 
         display.set_update_speed(1)
-        draw_display(sleeping=True)
+        disp.draw_display(velocity=velocity, batpc=batpc, distance=distance,
+                          year=year, month=month, day=day, hour=hour, minute=minute, second=second, dist_since_on=dist_since_on,
+                          sleeping=True)
         print("Debug: Going for a deep sleep")
         if(hour < 7): # sleep a lot at night
             badger2040.sleep_for(60) # sleep for 1 hour
