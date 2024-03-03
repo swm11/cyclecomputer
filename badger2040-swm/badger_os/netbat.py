@@ -18,7 +18,6 @@ import machine
 import WIFI_CONFIG
 import badger2040
 
-
 def get_network_time(rtc):
     if not(badger2040.is_wireless()):
         print("Debug: no wireless so cannot get the network time!")
@@ -60,30 +59,30 @@ def download_file(url,filename):
     gc.collect()
 
     
-def setPadCtrl(gpio, value):
+def _setPadCtrl(gpio, value):
     machine.mem32[0x4001c000 | (4+ (4 * gpio))] = value
     
 
-def getPadCtrl(gpio):
+def _getPadCtrl(gpio):
     return machine.mem32[0x4001c000 | (4+ (4 * gpio))]
 
 
-def readVsys():
-    oldpad29 = getPadCtrl(29)
-    oldpad25 = getPadCtrl(25)
-    setPadCtrl(29,128)  #no pulls, no output, no input
-    #setPadCtrl(25,0)    #output drive 2mA
+def _readVsys():
+    oldpad29 = _getPadCtrl(29)
+    oldpad25 = _getPadCtrl(25)
+    _setPadCtrl(29,128)  #no pulls, no output, no input
+    #_setPadCtrl(25,0)    #output drive 2mA
     adc_en_vsys = machine.Pin(25, machine.Pin.OUT)
     adc_en_vsys.value(1)
     time.sleep_ms(1) # SWM: allow time for pin to stabalise?
     adc_Vsys = machine.ADC(3)
     Vsys = float(adc_Vsys.read_u16()) * 3.0 * 3.3 / float(1 << 16)
-    setPadCtrl(29,oldpad29)
-    setPadCtrl(25,oldpad25)
+    _setPadCtrl(29,oldpad29)
+    _setPadCtrl(25,oldpad25)
     return Vsys
 
 
-def batVolt2Percent(voltage):
+def _batVolt2Percent(voltage):
     empty = 2.99
     full = 3.85
     if(voltage<empty):
@@ -93,3 +92,6 @@ def batVolt2Percent(voltage):
     return (voltage-empty)*100/(full-empty)
 
 
+def readBatteryPercent():
+    batv = _readVsys()
+    return _batVolt2Percent(batv)
