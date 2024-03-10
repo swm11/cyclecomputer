@@ -1,3 +1,8 @@
+#-----------------------------------------------------------------------------
+# Main - launch Cycle Computer 2
+#-----------------------------------------------------------------------------
+# Copyright (c) Simon W. Moore, March 2024
+
 import time
 import machine
 import cyclecomputer2
