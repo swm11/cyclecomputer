@@ -30,11 +30,12 @@ def button(pin):
         return
     if(button_up.value()):
         baseurl="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/"
-        downloaddir="download/"
+        downloaddir="download"
         try:
             os.mkdir(downloaddir)
         except:
             pass
+        downloaddir=downloaddir+"/"
         status="Downloading updates:\n"
         try:
             for fn in manifest.manifest:
