@@ -1,6 +1,10 @@
-import rp2
+#-----------------------------------------------------------------------------
+# Movement - detect movement for Cycle Computer 2 using Pico PIO programs
+#-----------------------------------------------------------------------------
+# Copyright (c) Simon W. Moore, March 2024
 
-    
+
+import rp2
 
 class Movement:
     def __sign_extend(self, value, bits):
