@@ -26,10 +26,15 @@ def get_network_time(rtc):
     # from urllib.urequest import urlopen
 
     try:
+        gc.collect()
         network_manager = NetworkManager(WIFI_CONFIG.COUNTRY) # , status_handler=self.status_handler)
         uasyncio.get_event_loop().run_until_complete(network_manager.client(WIFI_CONFIG.SSID, WIFI_CONFIG.PSK))
-        gc.collect()
         net = network.WLAN(network.STA_IF).ifconfig()
+        j=5
+        while(not(network.WLAN(network.STA_IF).isconnected()) and (j>0)):
+            print("Debug: waiting for network to come up...")
+            time.sleep(1)
+            j=j-1
         if network.WLAN(network.STA_IF).isconnected():
             ntptime.timeout=2
             ntptime.host = "uk.pool.ntp.org"

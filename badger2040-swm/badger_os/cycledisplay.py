@@ -28,7 +28,7 @@ class cycledisplay:
         self.display.set_pen(15)
         self.display.clear()
         self.display.set_pen(0)
-        seld.display.set_font("bitmap8")
+        self.display.set_font("bitmap8")
         y=0
         for line in msg.split('\n'):
             self.display.text(line,0,y)
