@@ -11,7 +11,7 @@ import gc
 from movement import Movement
 import netbat
 import cycledisplay
-
+import manifest
 
 # Button handling function
 def button(pin):
@@ -21,26 +21,26 @@ def button(pin):
     global button_up
     global button_down
     global rtc
+    global disp
     time.sleep(0.01)
     if not pin.value():
         return
     if(button_up.value()):
-        manifest = ["main.py", "cycle_computer.py", "cyclecomputer2.py", "netbat.py", "movement.py", "cycledisplay.py"]
         baseurl="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/"
         status="Downloading updates:\n"
         try:
-            for fn in manifest:
+            for fn in manifest.manifest:
                 status=status+fn
-                display_message(status)
+                disp.display_message(status)
                 print(fn)
-                download_file(baseurl+fn, fn)
+                netbat.download_file(baseurl+fn, fn)
                 status=status+"   SUCCESS!!!\n"
-                display_message(status)
+                disp.display_message(status)
             machine.reset()
         except (RuntimeError, OSError) as e:
             print(f"Update FAILED :(\n{e.value}")
             status=status+f"Update FAILED :(\n{e.value}"
-            display_message(status)
+            disp.display_message(status)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
         machine.reset()
