@@ -36,12 +36,12 @@ def button(pin):
                 disp.display_message(status)
                 print(fn)
                 netbat.download_file(baseurl+fn, fn)
-                status=status+"   SUCCESS!!!\n"
+                status=status+"  SUCCESS!!!\n"
                 disp.display_message(status)
             machine.reset()
         except (RuntimeError, OSError) as e:
             print(f"Update FAILED :(\n{e.value}")
-            status=status+f"Update FAILED :(\n{e.value}"
+            status=status+f"\nUpdate FAILED :(\n{e.value}"
             disp.display_message(status)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
