@@ -3,6 +3,7 @@
 #-----------------------------------------------------------------------------
 # Copyright (c) Simon W. Moore, March 2024
 
+import os
 import time
 import json
 import machine
@@ -29,15 +30,27 @@ def button(pin):
         return
     if(button_up.value()):
         baseurl="https://github.com/swm11/cyclecomputer/raw/main/badger2040-swm/badger_os/"
+        downloaddir="download/"
+        try:
+            os.mkdir(downloaddir)
+        except:
+            pass
         status="Downloading updates:\n"
         try:
             for fn in manifest.manifest:
                 status=status+fn
                 disp.display_message(status)
                 print(fn)
-                netbat.download_file(baseurl+fn, fn)
+                netbat.download_file(baseurl+fn, downloaddir+fn)
                 status=status+"  SUCCESS!!!\n"
                 disp.display_message(status)
+            # now downloads have all completed, copy over main files
+            print("Debug: copy over downloaded files")
+            for fn in manifest.manifest:
+                with open(downloaddir+fn,"r") as fr:
+                    with open(fn,"w") as fw:
+                        fw.write(fr.read())
+            # reboot to use new files
             machine.reset()
         except (RuntimeError, OSError) as e:
             print(f"Update FAILED :(\n{e.value}")
@@ -225,13 +238,14 @@ def cyclecomputer2():
                     disp.display_message("Failed to save state")
             # Since we were moving but have now stopped we may be near a wifi hotspot,
             # so try using NTP to set the time
-#            netbat.get_network_time(rtc)
-            try:
-                netbat.get_network_time(rtc)
-                disp.display_message("GOT NETWORK TIME!")
-            except Exception as e:
-                print("Failed to get network time")
-                print("Exception: ",e)
+            # Only try NTP at 3am when most likely at home; save power otherwise 
+            if(hour==3):
+                try:
+                    netbat.get_network_time(rtc)
+                    disp.display_message("GOT NETWORK TIME!")
+                except Exception as e:
+                    print("Failed to get network time")
+                    print("Exception: ",e)
 
             disp.display.set_update_speed(1)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance,
