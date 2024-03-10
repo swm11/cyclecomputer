@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------
 # Network and Battery management
-# ==============================
-# Copyright (c) Simon W. Moore 2023
+#-----------------------------------------------------------------------------
+# Copyright (c) Simon W. Moore, March 2024
 #
 # Note: accessing the network and reading the battery voltage are
 # interlinked on the Pico-W - you can only do one or the other due
