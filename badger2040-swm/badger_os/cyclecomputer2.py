@@ -1,6 +1,8 @@
-# R 2023-11-15
-# TODO: remove use of upper distance counter since it will never be needed (would need to cycle over 20k miles between stops!)
-# TODO: remove use of .format
+#-----------------------------------------------------------------------------
+# Cycle Computer 2
+#-----------------------------------------------------------------------------
+# Copyright (c) Simon W. Moore, March 2024
+
 import time
 import json
 import machine
@@ -117,7 +119,7 @@ def cyclecomputer2():
     rtc = machine.RTC()
     year, month, day, wd, hour, minute, second, _ = rtc.datetime()
 
-    state_file_archive = "logs/{:04}{:02}{:02}state.json".format(year, month, day)
+    state_file_archive = f"logs/{year:04}{month:02}{day:02}state.json"
     state_file = "state.json"
     write_new_state_file = False
     try:
