@@ -38,14 +38,17 @@ def button(pin):
         downloaddir=downloaddir+"/"
         status="Downloading updates:\n"
         try:
+            n = len(manifest.manifest)
+            j = 1
             for fn in manifest.manifest:
-                status=status+fn
+                status=status+f"{j} of {n}: {fn:20}"
+                j=j+1
                 disp.display_message(status)
                 print(fn)
                 netbat.download_file(baseurl+fn, downloaddir+fn)
-                status=status+"  SUCCESS!!!\n"
-                disp.display_message(status)
+                status=status+" /\n"
             # now downloads have all completed, copy over main files
+            disp.display_message(status)
             print("Debug: copy over downloaded files")
             for fn in manifest.manifest:
                 with open(downloaddir+fn,"r") as fr:
