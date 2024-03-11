@@ -23,7 +23,10 @@ class Movement:
         while((timeout>0) and (self.pioperiodsm.rx_fifo()>0)):
             self.velocity_counter = -self.__sign_extend(self.pioperiodsm.get(),32)-1
             timeout = timeout-1
-        return 0.0 if (self.velocity_counter < 0) else self.dist_per_pulse * 1000000.0 / self.velocity_counter
+        # velocity in meter/s = self.dist_per_pulse * 1000000.0 / self.velocity_counter
+        # velocity in km/h    = velocity_m/s * 60 * 60 / 1000
+        # simplify constant:    1000000.0 * 60.0 * 60.0 / 1000.0 = 3600000.0
+        return 0.0 if (self.velocity_counter < 0) else self.dist_per_pulse * 3600000.0 / self.velocity_counter
 
     def __init__(self,button,dist_per_pulse):
         # PIO program for dynamo input change counter (i.e. distance)
