@@ -8,7 +8,7 @@ import badger2040
 from picographics import PicoGraphics, DISPLAY_INKY_PACK
 
 class cycledisplay:
-    def __init__(self):
+    def __init__(self,bst):
         self.display = badger2040.Badger2040()
         self.display.display = PicoGraphics(display=DISPLAY_INKY_PACK)
         self.display.set_thickness(2)
@@ -23,6 +23,7 @@ class cycledisplay:
         self.cursors = ["year", "month", "day", "hour", "minute"]
         self.cursor = 0
         self.last = 0
+        self.bst = bst
 
     def display_message(self, msg="Hello World!"):
         self.display.set_pen(15)
@@ -82,6 +83,13 @@ class cycledisplay:
         dst = "Hello"
         dst = f"{distance:.3f}km"
         #vel = f"{velocity:.2f}km/h"
+        if(self.bst):
+            hour = hour+1
+            if(hour==24):
+                hour = 0
+                day = day+1
+                # TODO: sort out roll-over of day and month?
+
         if(sleeping):
             hms = f"{hour:02}:{minute:02}"
         else:

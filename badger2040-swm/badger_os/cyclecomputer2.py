@@ -16,6 +16,8 @@ import netbat
 import cycledisplay
 import manifest
 
+BST = True      # TODO: automate determining British Summer Time
+
 # Button handling function
 def button(pin):
     global button_a
@@ -97,6 +99,7 @@ def cyclecomputer2():
     global wlan
     global disp
     global rtc
+    global BST
 
     global woken_by_button
     global woken_by_rtc
@@ -116,7 +119,7 @@ def cyclecomputer2():
     batpc = 0    
     client=None
     wlan=None
-    disp=cycledisplay.cycledisplay()
+    disp=cycledisplay.cycledisplay(bst=BST)
 
     woken_by_button = badger2040.woken_by_button()  # Must be done before we clear_pressed_to_wake
     woken_by_rtc = badger2040.woken_by_rtc()
@@ -135,7 +138,6 @@ def cyclecomputer2():
 
     rtc = machine.RTC()
     year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-
     state_file_archive = f"logs/{year:04}{month:02}{day:02}state.json"
     state_file = "state.json"
     write_new_state_file = False
@@ -175,6 +177,7 @@ def cyclecomputer2():
     year, month, day, wd, hour, minute, second, _ = rtc.datetime()
     last_second = second
     last_minute = minute
+
     read_battery_level()
 
     ctr_lower = 0
