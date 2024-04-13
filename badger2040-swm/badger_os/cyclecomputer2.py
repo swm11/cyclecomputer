@@ -262,7 +262,7 @@ def cyclecomputer2():
             time.sleep(rapid_update_rate) # ensure display has completed update before going to sleep
 
             print("Debug: Going for a deep sleep")
-            if(hour < 7): # sleep a lot at night
+            if((hour < 7) or (batpc<90)): # sleep a lot at night or if low on power
                 badger2040.sleep_for(60) # sleep for 1 hour
             else:
                 badger2040.sleep_for(1) # sleep for 1 minute
