@@ -25,14 +25,14 @@ class cycledisplay:
         self.last = 0
         self.bst = bst
 
-    def display_message(self, msg="Hello World!"):
+    def display_message(self, msg="No message", scale=2):
         self.display.set_pen(15)
         self.display.clear()
         self.display.set_pen(0)
         self.display.set_font("bitmap8")
         y=0
         for line in msg.split('\n'):
-            self.display.text(line,0,y)
+            self.display.text(line,0,y,scale=scale)
             y=y+16
         self.display.update()
 
