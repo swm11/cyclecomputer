@@ -10,6 +10,7 @@
 import time
 from network_manager import NetworkManager
 import network
+import socket
 import ntptime
 import urequests
 import uasyncio
@@ -61,8 +62,27 @@ def download_file(url,filename):
     fromweb = urequests.get(url)
     with open(filename, "w") as fw:
         fw.write(fromweb.text)
+    wlan.active(False)
     gc.collect()
 
+
+def tx2server(data):
+    HOST, PORT = "192.168.1.124", 5050
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(WIFI_CONFIG.SSID, WIFI_CONFIG.PSK)
+    sockaddr = socket.getaddrinfo(HOST, PORT)[0][-1]
+    sock = socket.socket()
+    sock.connect(sockaddr)
+    sock.sendall(bytes(data + "\n", "utf-8"))
+
+    # Receive data from the server and shut down socket
+    received = str(sock.recv(1024), "utf-8")
+    sock.close()
+    wlan.active(False)
+    gc.collect()
+    return received
+    
     
 def _setPadCtrl(gpio, value):
     machine.mem32[0x4001c000 | (4+ (4 * gpio))] = value

@@ -65,6 +65,16 @@ def button(pin):
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
         machine.reset()
+    if button_a.value():
+        #body = "And here\nis the body\n"
+        filelist = os.listdir("logs")
+        body=",".join(filelist)
+        header = {"cmd": "LogFiles", "payload": bytes(body, "ascii")}
+        try:
+            rtn = netbat.tx2server(json.dumps(header))
+            disp.display_message("TX test returned:\n"+rtn)
+        except:
+            disp.display_message("TX FAILED")
     if(button_down.value()):
         disp.display_message("Getting network time")
         try:
