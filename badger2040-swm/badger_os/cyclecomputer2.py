@@ -269,7 +269,7 @@ def cyclecomputer2():
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second,
                               dist_since_on=dist_since_on, sleeping=True)
 
-            time.sleep(rapid_update_rate) # ensure display has completed update before going to sleep
+            time.sleep(rapid_update_rate*2) # ensure display has completed update before going to sleep
 
             print("Debug: Going for a deep sleep")
             if((hour < 7) or (batpc<90)): # sleep a lot at night or if low on power
