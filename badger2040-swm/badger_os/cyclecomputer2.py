@@ -16,7 +16,7 @@ import netbat
 import cycledisplay
 import manifest
 
-BST = True      # TODO: automate determining British Summer Time
+BST = True       # TODO: automate determining British Summer Time
 
 # Button handling function
 def button(pin):
