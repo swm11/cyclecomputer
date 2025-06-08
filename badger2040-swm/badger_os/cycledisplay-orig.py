@@ -5,18 +5,16 @@
 
 
 import badger2040
-import math
-import time
 from picographics import PicoGraphics, DISPLAY_INKY_PACK
 
 class cycledisplay:
-    def __init__(self,bst=False):
+    def __init__(self,bst):
         self.display = badger2040.Badger2040()
         self.display.display = PicoGraphics(display=DISPLAY_INKY_PACK)
         self.display.set_thickness(2)
         self.WIDTH, self.HEIGHT = self.display.get_bounds()
         self.display.set_update_speed(badger2040.UPDATE_FAST)
-        self.display.set_font("bitmap8")
+        self.display.set_font("sans")
         self.bat_font_size = 0.5
         self.clk_font_size = 0.5
         self.dat_font_size = 0.5
@@ -38,27 +36,32 @@ class cycledisplay:
             y=y+16
         self.display.update()
 
-    def __draw_speedometer(self, v):
-        os = (self.HEIGHT//2)-1
-        vmax=40
-        sa = math.pi*2/vmax
-        self.display.circle(os,os,os)
-        self.display.set_pen(15)
-        self.display.circle(os,os,40)
+    def __draw_speedometer(self, v, dist_since_on):
+        vmax = 30
+        if(v>vmax):
+            v = vmax
         self.display.set_pen(0)
-        if(v<10):
-            self.display.text(f"{v}", os-8, os-18, scale=4)
-        else:
-            self.display.text(f"{v}", os-16, os-18, scale=4)
-        self.display.text("km/h", os-2*8-4, os+14, scale=2)        
-        self.display.set_pen(15)
-        odx = math.sin(-v*sa)
-        ody = math.cos(-v*sa)
-        od0 = os-25
-        od1 = os-5
-        self.display.line(int(od0*odx)+os, int(od0*ody)+os, int(od1*odx)+os, int(od1*ody)+os, 5)
-        self.display.set_pen(0)
-        
+        scalex=6
+        scaley=2
+        w=vmax*scalex
+        h=vmax*scaley
+        x0=1
+        y0=h+1+12
+        x1=x0+w
+        y1=y0-h
+        xv=int(x0+v*scalex)
+        yv=int(y0-v*scaley)
+        self.display.line(x0-1,y0+1, x1+1,y0+1)
+        self.display.line(x0-1,y0+1, x1+1,y1-1)
+        self.display.line(x1+1,y0+1, x1+1,y1-1)
+        self.display.triangle(x0,y0, xv,y0, xv,yv)
+        self.display.set_font("bitmap6")
+        for vt in range(0,vmax,5):
+            self.display.text(f"{vt}",x0+vt*scalex,y0+6)
+        # Display debug output
+        self.display.text(f"{v:0.1f}km/h",vmax*scalex+8,y0-10)
+        self.display.text(f"{dist_since_on:.3f}km",vmax*scalex+8,y0-24)
+
     def __draw_battery(self, batpc):
         bat = f"{batpc:0.1f}%"
         barlen = int(batpc/4)
@@ -74,9 +77,12 @@ class cycledisplay:
         self.display.rectangle(x0+w-3,y0+3,2,h-6)
         self.display.set_font("bitmap6")
         self.display.text(bat, x0-self.display.measure_text(bat)-2, 0)
-        self.display.set_font("bitmap8")
     
     def draw_display(self, velocity, distance, dist_since_on, batpc, year, month, day, hour, minute, second, sleeping=False):
+
+        dst = "Hello"
+        dst = f"{distance:.3f}km"
+        #vel = f"{velocity:.2f}km/h"
         if(self.bst):
             hour = hour+1
             if(hour==24):
@@ -98,23 +104,17 @@ class cycledisplay:
         self.display.set_pen(0)
         self.__draw_battery(batpc)
     
-        dist_str = f"total: {distance:4.1f}km"
-        d_width = self.display.measure_text(dist_str)
-        d_offset = self.WIDTH-d_width
+        self.display.set_font("bitmap8")
+        d_width = self.display.measure_text(ymd)
+        d_offset = badger2040.WIDTH - d_width
         y0=badger2040.HEIGHT-16
-        self.display.text(f"trip: {dist_since_on:2.2f}km", d_offset, y0-60)
-        self.display.text(dist_str, d_offset, y0-40)
-        self.display.text(hms, d_offset, y0-20)
-        self.display.text(ymd, d_offset, y0)
+        self.display.text(hms, d_offset, y0-20) # , wordwrap=0, scale=self.clk_font_size)
+        self.display.text(ymd, d_offset, y0) # , wordwrap=0, scale=self.dat_font_size)
 
-        self.__draw_speedometer(velocity)
+        self.display.set_font("sans")
+        self.display.text(dst, 0, badger2040.HEIGHT-15, wordwrap=0, scale=self.dist_font_size)
+        self.__draw_speedometer(velocity, dist_since_on)
 
         self.display.update()
         self.display.set_update_speed(badger2040.UPDATE_TURBO)
 
-
-# for debug if running this file directly
-if __name__ == "__main__":
-    disp = cycledisplay()
-    for v in range(30):
-        disp.draw_display(velocity=v, distance=2000.4, dist_since_on=1.34, batpc=91, year=2025, month=6, day=8, hour=21, minute=01, second=4, sleeping=False)
