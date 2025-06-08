@@ -62,6 +62,7 @@ def button(pin):
             print(f"Update FAILED :(\n{e.value}")
             status=status+f"\nUpdate FAILED :(\n{e.value}"
             disp.display_message(status)
+            time.sleep(10)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
         machine.reset()
@@ -191,7 +192,8 @@ def cyclecomputer2():
     read_battery_level()
 
     ctr_lower = 0
-    rapid_update_rate = 3  # max update rate is every 3 seconds
+#    rapid_update_rate = 3  # max update rate is every 3 seconds
+    rapid_update_rate = 1  # max update rate is every second
     sleep_after = 3*60 # sleep after 3 minutes of not moving
     # If we're woken by by the RTC then fast track to sleep, otherwise wait for events (distance)
     moves = Movement(button=button_c, dist_per_pulse=dist_per_pulse)
