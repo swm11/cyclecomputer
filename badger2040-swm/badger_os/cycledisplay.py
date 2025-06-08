@@ -46,10 +46,10 @@ class cycledisplay:
         self.display.set_pen(15)
         self.display.circle(os,os,40)
         self.display.set_pen(0)
-        if(v<10):
-            self.display.text(f"{v}", os-8, os-18, scale=4)
-        else:
-            self.display.text(f"{v}", os-16, os-18, scale=4)
+        vi = int(v)
+        vs = f"{vi}"
+        vw = self.display.measure_text(vs)  # note this is for scale=2 width
+        self.display.text(vs, os-vw+2, os-18, scale=4)
         self.display.text("km/h", os-2*8-4, os+14, scale=2)        
         self.display.set_pen(15)
         odx = math.sin(-v*sa)
@@ -117,4 +117,4 @@ class cycledisplay:
 if __name__ == "__main__":
     disp = cycledisplay()
     for v in range(30):
-        disp.draw_display(velocity=v, distance=2000.4, dist_since_on=1.34, batpc=91, year=2025, month=6, day=8, hour=21, minute=01, second=4, sleeping=False)
+        disp.draw_display(velocity=v+0.1, distance=2000.4, dist_since_on=1.34, batpc=91, year=2025, month=6, day=8, hour=21, minute=01, second=4, sleeping=False)
