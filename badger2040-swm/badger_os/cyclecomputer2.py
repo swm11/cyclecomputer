@@ -207,7 +207,7 @@ def cyclecomputer2():
     velocity = 0
     dist_since_on = 0
     if(woken_by_rtc):
-        sleep_ctr = 1
+        sleep_ctr = 0
     else:
         sleep_ctr = 12/rapid_update_rate
 
