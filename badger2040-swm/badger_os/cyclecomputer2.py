@@ -264,7 +264,7 @@ def cyclecomputer2():
                     print("Failed to get network time")
                     print("Exception: ",e)
 
-            disp.display.set_update_speed(1)
+            disp.display.set_update_speed(badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance,
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second,
                               dist_since_on=dist_since_on, sleeping=True)

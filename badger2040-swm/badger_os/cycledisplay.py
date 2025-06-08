@@ -13,7 +13,7 @@ class cycledisplay:
         self.display.display = PicoGraphics(display=DISPLAY_INKY_PACK)
         self.display.set_thickness(2)
         self.WIDTH, self.HEIGHT = self.display.get_bounds()
-        self.display.set_update_speed(1)
+        self.display.set_update_speed(badger2040.UPDATE_FAST)
         self.display.set_font("sans")
         self.bat_font_size = 0.5
         self.clk_font_size = 0.5
@@ -116,5 +116,5 @@ class cycledisplay:
         self.__draw_speedometer(velocity, dist_since_on)
 
         self.display.update()
-        self.display.set_update_speed(2)
+        self.display.set_update_speed(badger2040.UPDATE_TURBO)
 
