@@ -50,14 +50,17 @@ def button(pin):
                 netbat.download_file(baseurl+fn, downloaddir+fn)
                 status=status+" /\n"
             # now downloads have all completed, copy over main files
+            status=status+"Download complete. Rebooting..."
             disp.display_message(status)
-            print("Debug: copy over downloaded files")
+            # print("Debug: copy over downloaded files")
             for fn in manifest.manifest:
                 with open(downloaddir+fn,"r") as fr:
                     with open(fn,"w") as fw:
                         fw.write(fr.read())
             # reboot to use new files
             machine.reset()
+            disp.display_message("Reboot failed")
+            time.sleep(10)
         except (RuntimeError, OSError) as e:
             print(f"Update FAILED :(\n{e.value}")
             status=status+f"\nUpdate FAILED :(\n{e.value}"
@@ -65,6 +68,7 @@ def button(pin):
             time.sleep(10)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
+        time.sleep(1)
         machine.reset()
     if button_a.value():
         #body = "And here\nis the body\n"
@@ -84,6 +88,7 @@ def button(pin):
         except Exception as e:
             disp.display_message("Failed to get network time")
             print("Exception: ",e)
+            time.sleep(10)
 
 
 #def days_in_month(month, year):
