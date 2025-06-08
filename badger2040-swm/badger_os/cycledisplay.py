@@ -28,6 +28,7 @@ class cycledisplay:
         self.bst = bst
 
     def display_message(self, msg="No message", scale=2):
+        self.display.set_update_speed(badger2040.UPDATE_FAST)
         self.display.set_pen(15)
         self.display.clear()
         self.display.set_pen(0)
