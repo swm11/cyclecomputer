@@ -38,6 +38,7 @@ def button(pin):
         except:
             pass
         downloaddir=downloaddir+"/"
+        disp.display.set_update_speed(badger2040.UPDATE_FAST)
         status="Downloading updates:\n"
         try:
             n = len(manifest.manifest)
@@ -58,6 +59,7 @@ def button(pin):
                     with open(fn,"w") as fw:
                         fw.write(fr.read())
             # reboot to use new files
+            time.sleep(2)
             machine.reset()
             disp.display_message("Reboot failed")
             time.sleep(10)
