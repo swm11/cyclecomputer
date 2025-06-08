@@ -102,7 +102,7 @@ class cycledisplay:
         d_width = self.display.measure_text(dist_str)
         d_offset = self.WIDTH-d_width
         y0=badger2040.HEIGHT-16
-        self.display.text(f"trip: {dist_since_on:2.2f}km", d_offset, y0-60)
+        self.display.text(f"trip:  {dist_since_on:2.2f}km", d_offset, y0-60)
         self.display.text(dist_str, d_offset, y0-40)
         self.display.text(hms, d_offset, y0-20)
         self.display.text(ymd, d_offset, y0)
