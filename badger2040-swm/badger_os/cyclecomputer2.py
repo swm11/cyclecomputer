@@ -201,7 +201,7 @@ def cyclecomputer2():
     ctr_lower = 0
 #    rapid_update_rate = 3  # max update rate is every 3 seconds
     rapid_update_rate = 1  # max update rate is every second
-    sleep_after = 60 # sleep after 1 minute of not moving
+    sleep_after = 60 # sleep after 60 seconds of not moving
     # If we're woken by by the RTC then fast track to sleep, otherwise wait for events (distance)
     moves = Movement(button=button_c, dist_per_pulse=dist_per_pulse)
     velocity = 0
@@ -209,7 +209,7 @@ def cyclecomputer2():
     if(woken_by_rtc):
         sleep_ctr = 0
     else:
-        sleep_ctr = 12/rapid_update_rate
+        sleep_ctr = 12//rapid_update_rate
 
     while True:
         old_dist_since_on = dist_since_on
@@ -236,7 +236,7 @@ def cyclecomputer2():
                 sleep_ctr = sleep_after//rapid_update_rate
             else:
                 # probably just a nudge
-                sleep_ctr = 10//rapid_update_rate
+                sleep_ctr = 6//rapid_update_rate
         else:
             # stationary so count down to sleep
             sleep_ctr = sleep_ctr-1
