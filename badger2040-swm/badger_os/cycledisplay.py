@@ -111,7 +111,6 @@ class cycledisplay:
         self.__draw_speedometer(velocity)
 
         self.display.update()
-        self.display.set_update_speed(badger2040.UPDATE_TURBO)
 
 
 # for debug if running this file directly

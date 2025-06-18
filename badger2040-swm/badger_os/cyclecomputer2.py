@@ -226,6 +226,7 @@ def cyclecomputer2():
                 read_battery_level()
             last_minute = minute
             last_second = second
+            disp.display.set_update_speed(badger2040.UPDATE_TURBO if (moving) else badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance, dist_since_on=dist_since_on,
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second)
 
