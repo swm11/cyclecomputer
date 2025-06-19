@@ -106,7 +106,7 @@ class cycledisplay:
         trip_m = trip_seconds//60
         trip_s = trip_seconds%60
         self.display.text(f"trip:  {dist_since_on:2.2f}km", d_offset, y0-80)
-        self.display.text(f"       {trip_m:d}:{trip_s:02d}")
+        self.display.text(f"       {trip_m:d}:{trip_s:02d}", d_offset, y0-60)
         self.display.text(dist_str, d_offset, y0-40)
         self.display.text(hms, d_offset, y0-20)
         self.display.text(ymd, d_offset, y0)

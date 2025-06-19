@@ -224,7 +224,7 @@ def cyclecomputer2():
         moving = int(velocity)>0
 
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
-        time_since_on = (hour*60+minute)*60+second - (hour_since_on*60+minute_since_on)*60+second_since_on
+        time_since_on = ((hour*60+minute)*60+second) - ((hour_since_on*60+minute_since_on)*60+second_since_on)
         if((minute != last_minute) or moving or (velocity!=old_velocity)):
             if(minute != last_minute): # try to only read the battery voltage every minute
                 read_battery_level()
@@ -233,7 +233,7 @@ def cyclecomputer2():
             disp.display.set_update_speed(badger2040.UPDATE_TURBO if (moving) else badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance, dist_since_on=dist_since_on,
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second,
-                              trip_seconds = time_since_on)
+                              trip_seconds=time_since_on)
 
         if(moving):
             # we're moving...
@@ -283,7 +283,7 @@ def cyclecomputer2():
             disp.display.set_update_speed(badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance,
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second,
-                              dist_since_on=dist_since_on, sleeping=True)
+                              dist_since_on=dist_since_on, trip_seconds=time_since_on, sleeping=True)
 
             time.sleep(rapid_update_rate*2) # ensure display has completed update before going to sleep
 
