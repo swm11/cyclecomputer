@@ -156,6 +156,9 @@ def cyclecomputer2():
 
     rtc = machine.RTC()
     year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+    hour_since_on = hour
+    minute_since_on = minute
+    second_since_on = second
     state_file_archive = f"logs/{year:04}{month:02}{day:02}state.json"
     state_file = "state.json"
     write_new_state_file = False
@@ -221,6 +224,7 @@ def cyclecomputer2():
         moving = int(velocity)>0
 
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+        time_since_on = (hour*60+minute)*60+second - (hour_since_on*60+minute_since_on)*60+second_since_on
         if((minute != last_minute) or moving or (velocity!=old_velocity)):
             if(minute != last_minute): # try to only read the battery voltage every minute
                 read_battery_level()
@@ -228,11 +232,12 @@ def cyclecomputer2():
             last_second = second
             disp.display.set_update_speed(badger2040.UPDATE_TURBO if (moving) else badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance, dist_since_on=dist_since_on,
-                              year=year, month=month, day=day, hour=hour, minute=minute, second=second)
+                              year=year, month=month, day=day, hour=hour, minute=minute, second=second,
+                              trip_seconds = time_since_on)
 
         if(moving):
             # we're moving...
-            if(dist_since_on > 1.0):
+            if(dist_since_on > 0.001):
                 # we're really moving...
                 sleep_ctr = sleep_after//rapid_update_rate
             else:
@@ -247,7 +252,7 @@ def cyclecomputer2():
         else:
             # time for a deep sleep
             # determine if we need to save state - have we moved over 1m?
-            if(dist_since_on > 1.0):
+            if(dist_since_on > 0.001):
                 save_state = {
                     "dist"   : distance,
                     "year"   : year,

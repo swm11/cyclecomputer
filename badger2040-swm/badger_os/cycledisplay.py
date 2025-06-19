@@ -77,7 +77,7 @@ class cycledisplay:
         self.display.text(bat, x0-self.display.measure_text(bat)-2, 0)
         self.display.set_font("bitmap8")
     
-    def draw_display(self, velocity, distance, dist_since_on, batpc, year, month, day, hour, minute, second, sleeping=False):
+    def draw_display(self, velocity, distance, dist_since_on, batpc, year, month, day, hour, minute, second, trip_seconds=0, sleeping=False):
         if(self.bst):
             hour = hour+1
             if(hour==24):
@@ -103,7 +103,10 @@ class cycledisplay:
         d_width = self.display.measure_text(dist_str)
         d_offset = self.WIDTH-d_width
         y0=badger2040.HEIGHT-16
-        self.display.text(f"trip:  {dist_since_on:2.2f}km", d_offset, y0-60)
+        trip_m = trip_seconds//60
+        trip_s = trip_seconds%60
+        self.display.text(f"trip:  {dist_since_on:2.2f}km", d_offset, y0-80)
+        self.display.text(f"       {trip_m:d}:{trip_s:02d}")
         self.display.text(dist_str, d_offset, y0-40)
         self.display.text(hms, d_offset, y0-20)
         self.display.text(ymd, d_offset, y0)
