@@ -237,7 +237,7 @@ def cyclecomputer2():
 
         if(moving):
             # we're moving...
-            if(dist_since_on > 0.001):
+            if(dist_since_on > 0.01):
                 # we're really moving...
                 sleep_ctr = sleep_after//rapid_update_rate
             else:
