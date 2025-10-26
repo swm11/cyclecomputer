@@ -16,7 +16,7 @@ import netbat
 import cycledisplay
 import manifest
 
-BST = False      # TODO: automate determining British Summer Time
+BST = True       # TODO: automate determining British Summer Time
 
 # Button handling function
 def button(pin):
@@ -38,6 +38,7 @@ def button(pin):
         except:
             pass
         downloaddir=downloaddir+"/"
+        disp.display.set_update_speed(badger2040.UPDATE_FAST)
         status="Downloading updates:\n"
         try:
             n = len(manifest.manifest)
@@ -50,20 +51,26 @@ def button(pin):
                 netbat.download_file(baseurl+fn, downloaddir+fn)
                 status=status+" /\n"
             # now downloads have all completed, copy over main files
+            status=status+"Download complete. Rebooting..."
             disp.display_message(status)
-            print("Debug: copy over downloaded files")
+            # print("Debug: copy over downloaded files")
             for fn in manifest.manifest:
                 with open(downloaddir+fn,"r") as fr:
                     with open(fn,"w") as fw:
                         fw.write(fr.read())
             # reboot to use new files
+            time.sleep(2)
             machine.reset()
+            disp.display_message("Reboot failed")
+            time.sleep(10)
         except (RuntimeError, OSError) as e:
             print(f"Update FAILED :(\n{e.value}")
             status=status+f"\nUpdate FAILED :(\n{e.value}"
             disp.display_message(status)
+            time.sleep(10)
     if button_a.value() and button_b.value():
         disp.display_message("REBOOTING")
+        time.sleep(1)
         machine.reset()
     if button_a.value():
         #body = "And here\nis the body\n"
@@ -83,6 +90,7 @@ def button(pin):
         except Exception as e:
             disp.display_message("Failed to get network time")
             print("Exception: ",e)
+            time.sleep(10)
 
 
 #def days_in_month(month, year):
@@ -148,6 +156,9 @@ def cyclecomputer2():
 
     rtc = machine.RTC()
     year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+    hour_since_on = hour
+    minute_since_on = minute
+    second_since_on = second
     state_file_archive = f"logs/{year:04}{month:02}{day:02}state.json"
     state_file = "state.json"
     write_new_state_file = False
@@ -191,8 +202,9 @@ def cyclecomputer2():
     read_battery_level()
 
     ctr_lower = 0
-    rapid_update_rate = 3  # max update rate is every 3 seconds
-    sleep_after = 3*60 # sleep after 3 minutes of not moving
+#    rapid_update_rate = 3  # max update rate is every 3 seconds
+    rapid_update_rate = 1  # max update rate is every second
+    sleep_after = 60 # sleep after 60 seconds of not moving
     # If we're woken by by the RTC then fast track to sleep, otherwise wait for events (distance)
     moves = Movement(button=button_c, dist_per_pulse=dist_per_pulse)
     velocity = 0
@@ -200,7 +212,7 @@ def cyclecomputer2():
     if(woken_by_rtc):
         sleep_ctr = 0
     else:
-        sleep_ctr = 12/rapid_update_rate
+        sleep_ctr = 12//rapid_update_rate
 
     while True:
         old_dist_since_on = dist_since_on
@@ -208,25 +220,29 @@ def cyclecomputer2():
         dist_since_on = moves.distance_since_on()
         distance = restored_state["dist"] + dist_since_on
         velocity = moves.velocity()
-        moving = old_dist_since_on != dist_since_on
+        # moving = old_dist_since_on != dist_since_on
+        moving = int(velocity)>0
 
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
+        time_since_on = ((hour*60+minute)*60+second) - ((hour_since_on*60+minute_since_on)*60+second_since_on)
         if((minute != last_minute) or moving or (velocity!=old_velocity)):
             if(minute != last_minute): # try to only read the battery voltage every minute
                 read_battery_level()
             last_minute = minute
             last_second = second
+            disp.display.set_update_speed(badger2040.UPDATE_TURBO if (moving) else badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance, dist_since_on=dist_since_on,
-                              year=year, month=month, day=day, hour=hour, minute=minute, second=second)
+                              year=year, month=month, day=day, hour=hour, minute=minute, second=second,
+                              trip_seconds=time_since_on)
 
         if(moving):
             # we're moving...
-            if(dist_since_on > 1.0):
+            if(dist_since_on > 0.01):
                 # we're really moving...
-                sleep_ctr = sleep_after/rapid_update_rate
+                sleep_ctr = sleep_after//rapid_update_rate
             else:
                 # probably just a nudge
-                sleep_ctr = 30/rapid_update_rate
+                sleep_ctr = 6//rapid_update_rate
         else:
             # stationary so count down to sleep
             sleep_ctr = sleep_ctr-1
@@ -236,7 +252,7 @@ def cyclecomputer2():
         else:
             # time for a deep sleep
             # determine if we need to save state - have we moved over 1m?
-            if(dist_since_on > 1.0):
+            if(dist_since_on > 0.001):
                 save_state = {
                     "dist"   : distance,
                     "year"   : year,
@@ -264,10 +280,10 @@ def cyclecomputer2():
                     print("Failed to get network time")
                     print("Exception: ",e)
 
-            disp.display.set_update_speed(1)
+            disp.display.set_update_speed(badger2040.UPDATE_FAST)
             disp.draw_display(velocity=velocity, batpc=batpc, distance=distance,
                               year=year, month=month, day=day, hour=hour, minute=minute, second=second,
-                              dist_since_on=dist_since_on, sleeping=True)
+                              dist_since_on=dist_since_on, trip_seconds=time_since_on, sleeping=True)
 
             time.sleep(rapid_update_rate*2) # ensure display has completed update before going to sleep
 

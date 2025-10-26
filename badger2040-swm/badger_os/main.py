@@ -27,7 +27,10 @@ except Exception as e:
     disp.display_message(msg=errmsg, scale=1)
     badger2040.sleep_for(60) # sleep for 1 hour
 
-# TODO: The following is redundant if on battery power - remove?
-print("Sleeping 10s before reboot")
-time.sleep(10)
-machine.reset()
+# if cyclecomputer2 every exits, just sleep ready to be woken up by a button press
+badger2040.sleep_for(60) # sleep for 1 hour
+
+## TODO: The following is redundant if on battery power - remove?
+#print("Sleeping 10s before reboot")
+#time.sleep(10)
+#machine.reset()

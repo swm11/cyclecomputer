@@ -87,7 +87,7 @@ class Movement:
         self.pioctrsm.active(1)
         self.pioperiodsm = rp2.StateMachine(5, pioperiod, in_base=button, jmp_pin=button, freq=4000000)
         self.pioperiodsm.active(1)
-        period_timeout = 5000000
+        period_timeout = 5000000//5  # try reducing the timeout
         self.pioperiodsm.put(-period_timeout)
         self.dist_ctr = 0
         # remove any stray FIFO entries (needed?)
